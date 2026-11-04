@@ -1,0 +1,29 @@
+{
+  "name": "velvet-abyss",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Velvet Abyss — a dark, mobile-first casino of strange and dangerous games (play money only).",
+  "scripts": {
+    "dev": "vite",
+    "assets": "python3 scripts/build_assets.py",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --port 4173 --strictPort",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "check": "tsc --noEmit && vitest run"
+  },
+  "dependencies": {
+    "@fontsource/cinzel": "5.3.0",
+    "@fontsource/cinzel-decorative": "5.2.6",
+    "@fontsource/jacquard-24": "5.3.0",
+    "@fontsource/pixelify-sans": "5.3.0",
+    "@fontsource/vt323": "5.3.0",
+    "@fontsource/spectral": "5.3.0"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "vite": "7.3.7",
+    "vitest": "4.0.18"
+  }
+}
