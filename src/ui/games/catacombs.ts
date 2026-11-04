@@ -210,7 +210,7 @@ export const plinkoGame: GameMount = ctx => {
   };
   raf = requestAnimationFrame(loop);
   function drop(): void {
-    if (balls.length >= 12) return;
+    if (balls.length >= 30) return;
     const stake = ctx.bet();
     if (!ctx.wager(stake)) return;
     const { path, slot } = G.dropBall(rows);
@@ -221,7 +221,9 @@ export const plinkoGame: GameMount = ctx => {
   const setRows = (n: number) => { if (balls.length) { toast(['Wait for the skulls to land.']); return; } rows = n; rowBtns.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.textContent === String(n))); drawBoard(); };
   for (const n of G.PLINKO_ROWS) rowBtns.append(h('button', { class: 'chip-v' + (n === rows ? ' on' : ''), onclick: () => setRows(n) }, String(n)));
   ctx.stage.append(h('div', { style: { display: 'flex', alignItems: 'center', gap: '8px' } }, h('span', 'label-gold', 'Rows'), rowBtns));
-  ctx.controls.append(btn('Drop a skull', 'blood big', drop));
+  let volley = 0;
+  ctx.controls.append(btn('Drop ×10', '', () => { if (volley) return; let n = 0; volley = window.setInterval(() => { drop(); if (++n >= 10) { clearInterval(volley); volley = 0; } }, 140); }), btn('Drop a skull', 'blood big', drop));
+  ctx.addCleanup(() => clearInterval(volley));
   return () => cancelAnimationFrame(raf);
 };
 

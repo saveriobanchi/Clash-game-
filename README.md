@@ -26,8 +26,8 @@ page and choose *Add to Home Screen*: it runs full-screen and works offline.
 | Floor (host) | Rank | Games |
 | --- | --- | --- |
 | I · The Gilded Parlor (Lady Vesper) | 1 | **Fate's Coin** (classic · streak · cursed edge ×48), **Bone Dice** (over/under at any odds · Triple Bones 3d6), **Reliquary Reels** (3 machines: low, brutal, expanding wilds, free spins, progressive Hoard), **Hi-Lo Ladder** (classic · skull deck) |
-| II · The Velvet Salon (Sir Corvin) | 4 | **Blackjack** (classic · Hellfire), **Wheel of Thorns** (European · Devil's wheel with cursed ×50–×500 numbers), **Jacks of the Damned** (9/6 video poker + double-up), **Baccarat Noir** |
-| III · The Catacombs (the Sightless Oracle) | 8 | **Crypt Delve** (mines 3×3/5×5/6×6), **Bone Drop** (plinko 8/12/16 rows × 3 risks), **Grave Tickets** (finger-scratch, 3 tiers up to ×5000), **Séance** (keno 40/10), **Spectral Derby** (pixel-creature races) |
+| II · The Velvet Salon (Sir Corvin) | 4 | **Blackjack** (classic · Hellfire · Blood Pair side bet), **Wheel of Thorns** (European · Devil's wheel with cursed ×50–×500 numbers), **Jacks of the Damned** (Jacks or Better 9/6 · Deuces Wild, both with double-up), **Baccarat Noir** |
+| III · The Catacombs (the Sightless Oracle) | 8 | **Crypt Delve** (mines 3×3/5×5/6×6), **Bone Drop** (plinko 8/12/16 rows × 3 risks, volleys of ten), **Grave Tickets** (finger-scratch, 3 tiers up to ×5000), **Séance** (keno 40/10), **Spectral Derby** (pixel-creature races) |
 | IV · The Abyss (the Proprietor) | 13 | **Blood Moon** (crash), **Ladder of Souls** (tower, 4 sins), **Wheel of Ruin**, **Six Chalices** (poison roulette), **Devil's Bargain** (stake a share of your whole fortune; wins pay souls) |
 
 Returns run from 95% to 99.5% and are shown on every table. `tests/rtp.test.ts` checks every one,
@@ -40,6 +40,8 @@ by exact calculation or by simulation (slots, blackjack, baccarat).
 - **The Tithe:** a free prize wheel every three hours.
 - **Relics** (permanent, bought with souls): rakeback, infamy, limits, Tithe and contract boosts, soul drops, cheaper loans, Oracle's Eye (odds and advice), Gravedigger's Spade (one safe pick).
 - **Pacts** (temporary, signed with souls): double infamy, extra rakeback, Blood Moon pays ×1.5 on big wins, doubled contracts.
+- **Host story arcs:** each floor's host speaks four times as you play their tables (first visit, 40, 150 and 400 rounds), with gifts and titles. Their favour shows on the floor's banner.
+- **Hot Table:** one game a day pays double infamy.
 - **The Grimoire:** 32 feats that pay souls.
 - **The Proprietor's Mercy:** when you are broke, a loan at interest. 30% of each win repays it.
 - **Redemption:** buy back your soul to reset, keeping relics and feats and earning a Sigil (limits ×1.5 forever). The price rises each cycle.

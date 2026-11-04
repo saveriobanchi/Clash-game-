@@ -20,6 +20,10 @@ async function boot(): Promise<void> {
   initFx();
   startApp(document.getElementById('app')!);
   document.getElementById('boot')?.remove();
+  if (location.search.includes('dev')) {
+    const [fx, eco] = await Promise.all([import('./ui/fx'), import('./core/economy')]);
+    (window as unknown as Record<string, unknown>).__va = { fx, eco };
+  }
 }
 void boot();
 if ('serviceWorker' in navigator && import.meta.env.PROD) addEventListener('load', () => { void navigator.serviceWorker.register('./sw.js').catch(() => undefined); });

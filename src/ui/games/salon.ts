@@ -20,7 +20,13 @@ export const blackjackGame: GameMount = ctx => {
   const handsBox = h('div', 'bj-hands');
   const rules = h('div', 'muted small', { style: { textAlign: 'center' } }, BJ_RULES[v].label);
   const hint = h('div', 'small', { style: { color: 'var(--teal)', minHeight: '1.2em' } });
-  ctx.stage.append(h('div', 'felt', dealerTot, dealerRow, h('div', { style: { height: '14px' } }), handsBox), rules, hint);
+  let pairOn = false;
+  const pairBtn = h('button', { class: 'side-bet', onclick: () => { if (round && !round.finished) return; pairOn = !pairOn; pairBtn.classList.toggle('on', pairOn); sfx.play('chip', 0.5); updPair(); } });
+  const updPair = () => { pairBtn.replaceChildren(h('b', {}, 'Blood Pair'), h('span', {}, pairOn ? `on · ${fmt(sideStake())} · pairs pay up to 25:1` : 'side bet off · tap to wager a fifth')); };
+  const sideStake = () => Math.max(1, Math.round(ctx.bet() / 5));
+  updPair();
+  ctx.stage.append(h('div', 'felt', dealerTot, dealerRow, h('div', { style: { height: '14px' } }), handsBox), pairBtn, rules, hint);
+  let sidePaid = 0;
   let round: BlackjackRound | null = null;
   let staked = 0;
   function drawTable(revealAll: boolean): void {
@@ -42,7 +48,15 @@ export const blackjackGame: GameMount = ctx => {
     const stake = ctx.bet();
     if (!ctx.wager(stake)) return;
     staked = stake; ctx.busy(true); ctx.say('');
+    sidePaid = 0;
+    let side = 0;
+    if (pairOn) { side = sideStake(); if (ctx.wager(side, true)) staked += side; else side = 0; }
     round = new BlackjackRound(shoe, v, stake);
+    if (side) {
+      const c = round.hands[0].cards;
+      sidePaid = side * T.bloodPair(c[0], c[1]);
+      if (sidePaid) setTimeout(() => { floatText(...centerOf(handsBox), `Blood Pair +${fmt(sidePaid)}`, 'gold'); sfx.win(2); }, 1200);
+    }
     // animate the deal
     const real = { d: round.dealer, p: round.hands[0].cards };
     round.dealer = []; round.hands[0].cards = [];
@@ -76,7 +90,7 @@ export const blackjackGame: GameMount = ctx => {
     for (let i = 2; i < full.length; i++) { await sleep(420); round.dealer.push(full[i]); drawTable(true); dealerRow.lastElementChild?.classList.add('deal'); sfx.play('card', 0.7); }
     await sleep(300);
     const pays = round.settle();
-    const total = pays.reduce((a, b) => a + b, 0);
+    const total = pays.reduce((a, b) => a + b, 0) + sidePaid;
     if (round.hands.some((hd, i) => hd.cards.length >= 5 && pays[i] > hd.stake && v === 'hellfire')) feat('charlie');
     const r = ctx.settle(staked, total, handsBox);
     const pBJ = isBlackjack(round.hands[0].cards) && round.hands.length === 1;
@@ -233,10 +247,14 @@ export const rouletteGame: GameMount = ctx => {
 
 /* ============================ JACKS OF THE DAMNED ============================ */
 export const pokerGame: GameMount = ctx => {
-  ctx.variants([{ id: 'job', label: 'Jacks or Better 9/6' }], 'job', () => undefined);
+  type V = 'job' | 'deuces';
+  let v: V = ctx.variants<V>([{ id: 'job', label: 'Jacks or Better 9/6' }, { id: 'deuces', label: 'Deuces Wild' }], 'job', x => { v = x; drawPays(); });
+  const pays = () => (v === 'job' ? T.VP_PAYS : T.DW_PAYS);
+  const evaluate = (c: Card[]) => (v === 'job' ? T.vpEvaluate(c) : T.dwEvaluate(c));
   const eye = (S.relics.eye ?? 0) > 0;
   const table = h('div', 'vp-table');
-  T.VP_PAYS.forEach(([n, p]) => table.append(h('div', 'vp-row', h('span', {}, n), h('b', {}, '×' + p))));
+  const drawPays = () => { clear(table); pays().forEach(([n, p]) => table.append(h('div', 'vp-row', h('span', {}, n), h('b', {}, '×' + p)))); if (v === 'deuces') table.append(h('div', 'vp-row wild', h('span', {}, 'All deuces are wild'), h('b', {}, '2♠'))); };
+  drawPays();
   const row = h('div', 'vp-cards');
   const tip = h('div', 'small', { style: { color: 'var(--teal)', minHeight: '1.2em' } });
   ctx.stage.append(table, row, tip);
@@ -248,7 +266,7 @@ export const pokerGame: GameMount = ctx => {
     hand.forEach((c, i) => {
       const e = cardEl(phase === 'idle' && !hand.length ? null : c, 'card-img vp');
       if (anim[i]) e.classList.add('flip');
-      const wrap = h('button', { class: 'vp-slot' + (held[i] ? ' held' : ''), onclick: () => { if (phase !== 'hold') return; held[i] = !held[i]; sfx.click(); drawHand(); } }, e, h('div', 'vp-held', 'HELD'));
+      const wrap = h('button', { class: 'vp-slot' + (held[i] ? ' held' : '') + (v === 'deuces' && c.r === 2 && hand.length ? ' wildcard' : ''), onclick: () => { if (phase !== 'hold') return; held[i] = !held[i]; sfx.click(); drawHand(); } }, e, h('div', 'vp-held', 'HELD'));
       row.append(wrap);
     });
     if (!hand.length) for (let i = 0; i < 5; i++) row.append(h('div', 'vp-slot', cardEl(null, 'card-img vp')));
@@ -258,13 +276,13 @@ export const pokerGame: GameMount = ctx => {
   async function deal(): Promise<void> {
     stake = ctx.bet();
     if (!ctx.wager(stake)) return;
-    ctx.busy(true); ctx.say(''); hl(-1);
+    ctx.busy(true); ctx.say(''); hl(-1); ctx.lockVariants?.(true);
     deck = T.vpDeck(); hand = deck.splice(0, 5); held = [false, false, false, false, false];
     phase = 'hold';
     for (let i = 0; i < 5; i++) { drawHand([...Array(5)].map((_, k) => k === i)); sfx.play('card', 0.6); await sleep(90); }
     drawHand();
-    const pre = T.vpEvaluate(hand); if (pre >= 0) { hl(pre); }
-    if (eye) { held = T.vpAdvice(hand); tip.textContent = 'Corvin has marked the cards he would keep.'; drawHand(); }
+    const pre = evaluate(hand); if (pre >= 0) { hl(pre); }
+    if (eye) { held = v === 'job' ? T.vpAdvice(hand) : T.dwAdvice(hand); tip.textContent = 'Corvin has marked the cards he would keep.'; drawHand(); }
     render();
   }
   async function draw(): Promise<void> {
@@ -273,18 +291,18 @@ export const pokerGame: GameMount = ctx => {
     phase = 'idle';
     drawHand(anim); sfx.play('slide', 0.7);
     await sleep(350);
-    const r = T.vpEvaluate(hand);
+    const r = evaluate(hand);
     hl(r);
     tip.textContent = '';
     if (r === 0) feat('royal');
     if (r >= 0) {
-      winAmt = stake * T.VP_PAYS[r][1];
-      ctx.say(`${T.VP_PAYS[r][0]}! ${fmt(winAmt)}`, 'win');
+      winAmt = stake * pays()[r][1];
+      ctx.say(`${pays()[r][0]}! ${fmt(winAmt)}`, 'win');
       sfx.win(2); burst(...centerOf(row), { n: 20 });
       phase = 'double'; doubles = 0;
     } else {
       ctx.settle(stake, 0, row, true); sfx.lose();
-      ctx.say('Nothing. The damned keep their jacks.', 'lose'); ctx.busy(false);
+      ctx.say(v === 'job' ? 'Nothing. The damned keep their jacks.' : 'Nothing. The deuces laugh.', 'lose'); ctx.busy(false);
     }
     render();
   }

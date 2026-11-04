@@ -149,3 +149,59 @@ export const BARGAIN_TIERS = [
   { frac: 0.5, souls: 1, label: 'Half Your Soul', sub: '50% · +1 soul on a win' },
   { frac: 1, souls: 3, label: 'Everything', sub: '100% · +3 souls on a win' },
 ];
+
+/* ---------------- Deuces Wild (stingy "Abyss" pay table) ---------------- */
+export const DW_PAYS: [string, number][] = [
+  ['Natural Royal', 800], ['Four Deuces', 200], ['Wild Royal', 25], ['Five of a Kind', 15], ['Straight Flush', 9],
+  ['Four of a Kind', 4], ['Full House', 3], ['Flush', 2], ['Straight', 2], ['Three of a Kind', 1],
+];
+export function dwEvaluate(h: Card[]): number {
+  const wild = h.filter(c => c.r === 2).length;
+  const rest = h.filter(c => c.r !== 2);
+  const flush = rest.every(c => c.s === (rest[0]?.s ?? c.s));
+  const rs = rest.map(c => c.r).sort((a, b) => a - b);
+  const counts = new Map<number, number>();
+  rs.forEach(r => counts.set(r, (counts.get(r) ?? 0) + 1));
+  const cv = [...counts.values()].sort((a, b) => b - a);
+  const top = (cv[0] ?? 0) + wild;
+  const uniq = new Set(rs).size === rs.length;
+  const canStraight = (lo: number) => rs.every(r => r >= lo && r <= lo + 4) || (lo === 1 && rs.every(r => r === 14 || r <= 5));
+  let straight = false, royal = false;
+  if (uniq) for (let lo = 1; lo <= 10; lo++) if (canStraight(lo)) { straight = true; if (lo === 10) royal = true; }
+  if (wild === 0 && flush && royal) return 0;
+  if (wild === 4) return 1;
+  if (flush && royal) return 2;
+  if (top >= 5) return 3;
+  if (flush && straight) return 4;
+  if (top === 4) return 5;
+  if ((cv[0] === 3 && cv[1] === 2) || (cv[0] === 2 && cv[1] === 2 && wild === 1)) return 6;
+  if (flush) return 7;
+  if (straight) return 8;
+  if (top === 3) return 9;
+  return -1;
+}
+/** Simple hold advice for Deuces Wild: keep deuces plus the best made group. */
+export function dwAdvice(h: Card[]): boolean[] {
+  if (dwEvaluate(h) >= 0 && dwEvaluate(h) <= 8) return h.map(() => true);
+  const hold = h.map(c => c.r === 2);
+  const counts = new Map<number, number[]>();
+  h.forEach((c, i) => { if (c.r !== 2) counts.set(c.r, [...(counts.get(c.r) ?? []), i]); });
+  const groups = [...counts.values()].filter(g => g.length >= 2);
+  groups.forEach(g => g.forEach(i => (hold[i] = true)));
+  if (!groups.length) {
+    const bySuit = new Map<string, number[]>();
+    h.forEach((c, i) => { if (c.r !== 2) bySuit.set(c.s, [...(bySuit.get(c.s) ?? []), i]); });
+    const fl = [...bySuit.values()].find(g => g.length + hold.filter(Boolean).length >= 4);
+    if (fl) fl.forEach(i => (hold[i] = true));
+  }
+  return hold;
+}
+
+/* ---------------- Blackjack side bet: Blood Pair ---------------- */
+/** Return (stake included) for the first two cards: mixed pair 6:1, same colour 12:1, perfect 25:1. */
+export function bloodPair(a: Card, b: Card): number {
+  if (a.r !== b.r) return 0;
+  if (a.s === b.s) return 26;
+  const red = (c: Card) => c.s === 'h' || c.s === 'd';
+  return red(a) === red(b) ? 13 : 7;
+}

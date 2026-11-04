@@ -4,7 +4,7 @@ import * as S from '../src/core/games/simple';
 import { MACHINES, simulateMachine } from '../src/core/games/slots';
 import { BlackjackRound, basicStrategy, BJ_RULES, BjVariant } from '../src/core/games/blackjack';
 import { Shoe } from '../src/core/cards';
-import { playBaccarat, BAC_PAYS, cursedStraightRtp, vpEvaluate, hiloStep, hiloP, SKULL_P } from '../src/core/games/table';
+import { playBaccarat, BAC_PAYS, cursedStraightRtp, vpEvaluate, hiloStep, hiloP, SKULL_P, dwEvaluate, DW_PAYS, vpDeck, dwAdvice, bloodPair } from '../src/core/games/table';
 
 beforeAll(() => setRng(seeded(7)));
 const band = (v: number, lo: number, hi: number) => { expect(v).toBeGreaterThanOrEqual(lo); expect(v).toBeLessThanOrEqual(hi); };
@@ -102,5 +102,30 @@ describe('card games', () => {
     expect(vpEvaluate(h('Ah 2d 3s 4c 5s'))).toBe(5);
     expect(vpEvaluate(h('Jh Jd 3s 4c 5s'))).toBe(8);
     expect(vpEvaluate(h('Th Td 3s 4c 5s'))).toBe(-1);
+  });
+  it('deuces wild evaluator and a below-100% return', () => {
+    const h = (s: string) => s.split(' ').map(x => ({ r: '23456789TJQKA'.indexOf(x[0]) + 2, s: x[1] as 's' }));
+    expect(dwEvaluate(h('Ts Js Qs Ks As'))).toBe(0);
+    expect(dwEvaluate(h('2s 2h 2d 2c 9s'))).toBe(1);
+    expect(dwEvaluate(h('Ts 2h Qs Ks As'))).toBe(2);
+    expect(dwEvaluate(h('9s 9h 2d 2c 9d'))).toBe(3);
+    expect(dwEvaluate(h('5s 6s 2d 8s 9s'))).toBe(4);
+    expect(dwEvaluate(h('9s 9h 2d 2c 3d'))).toBe(5);
+    expect(dwEvaluate(h('9s 9h 4d 4c 2d'))).toBe(6);
+    expect(dwEvaluate(h('As 2h 3d 4c 5d'))).toBe(8);
+    expect(dwEvaluate(h('9s 9h 2d Kc 3d'))).toBe(9);
+    expect(dwEvaluate(h('9s 8h 4d Kc 3d'))).toBe(-1);
+    let ret = 0; const N = 60000;
+    for (let i = 0; i < N; i++) {
+      const d = vpDeck(); let hand = d.splice(0, 5); const hold = dwAdvice(hand);
+      hand = hand.map((c, k) => (hold[k] ? c : d.shift()!));
+      const r = dwEvaluate(hand); if (r >= 0) ret += DW_PAYS[r][1];
+    }
+    band(ret / N, 0.8, 0.99);
+  });
+  it('blood pair side bet', () => {
+    const shoe = new Shoe(6); let ret = 0; const N = 300000;
+    for (let i = 0; i < N; i++) { if (shoe.needsShuffle()) shoe.shuffle(); ret += bloodPair(shoe.draw(), shoe.draw()); }
+    band(ret / N, 0.9, 0.98);
   });
 });

@@ -1,11 +1,11 @@
 import { Save, Contract, loadSave, persist, freshSave } from './state';
-import { FLOORS, GAMES, FEATS, RELICS, PACTS, GameId, FloorId, RelicId, PactId, gameById } from './content';
+import { FLOORS, GAMES, FEATS, RELICS, PACTS, GameId, FloorId, RelicId, PactId, gameById, HOST_ARCS, hotGame } from './content';
 import { rnd, randInt, pick } from './rng';
 
 type Ev =
   | { t: 'gold' } | { t: 'rank'; rank: number; gold: number; souls: number } | { t: 'feat'; id: string }
   | { t: 'contract'; c: Contract } | { t: 'soul'; n: number; why: string } | { t: 'toast'; text: string; kind?: string }
-  | { t: 'floor'; id: FloorId } | { t: 'game'; id: GameId };
+  | { t: 'floor'; id: FloorId } | { t: 'game'; id: GameId } | { t: 'host'; floor: FloorId };
 const subs: ((e: Ev) => void)[] = [];
 export const on = (f: (e: Ev) => void): void => { subs.push(f); };
 const emit = (e: Ev): void => subs.forEach(f => f(e));
@@ -65,11 +65,15 @@ export function wager(game: GameId, stake: number, extra = false): boolean {
   let xp = (extra ? 0 : 4) + 16 * share;
   xp *= 1 + relic('hourglass') * 0.15;
   if (S.pact?.id === 'hunger') xp *= 2;
+  if (game === hotGame()) xp *= 2;
   addXp(xp);
   progress('wager', stake, game);
   if (!extra) {
     roundActive = true;
     S.stats.rounds++; gs.rounds++;
+    const fl = gameById(game).floor;
+    S.favor[fl] = (S.favor[fl] ?? 0) + 1;
+    if (pendingArc(fl)) emit({ t: 'host', floor: fl });
     progress('rounds', 1, game);
     progress('floor', 1, game);
     if (S.pact && S.pact.id !== 'fortune') { S.pact.left--; if (S.pact.left <= 0) { emit({ t: 'toast', text: 'Your pact has ended.', kind: 'blood' }); S.pact = null; } }
@@ -258,3 +262,20 @@ export function betFor(game: GameId): number {
 export function setBet(game: GameId, v: number): void { S.bets[game] = v; persist(S); }
 export function variantFor(game: GameId, def: string): string { return S.variants[game] ?? def; }
 export function setVariant(game: GameId, v: string): void { S.variants[game] = v; persist(S); }
+
+/* ---------------- host favor ---------------- */
+export const arcStage = (f: FloorId): number => S.arc[f] ?? 0;
+/** The next story stage the player has earned but not yet heard, if any. */
+export function pendingArc(f: FloorId): typeof HOST_ARCS[FloorId][number] | null {
+  const st = HOST_ARCS[f][arcStage(f)];
+  return st && (S.favor[f] ?? 0) >= st.at ? st : null;
+}
+export function claimArc(f: FloorId): { gold: number; souls: number } | null {
+  const st = pendingArc(f);
+  if (!st) return null;
+  const gold = nice(maxBet() * st.gold);
+  S.gold += gold; S.souls += st.souls; S.arc[f] = arcStage(f) + 1; save();
+  return { gold, souls: st.souls };
+}
+export function hostTitle(f: FloorId): string { const n = arcStage(f); return n ? HOST_ARCS[f][n - 1].title : 'Stranger'; }
+export { hotGame };

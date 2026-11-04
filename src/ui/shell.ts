@@ -1,6 +1,8 @@
 import { h, clear } from './dom';
 import { sfx } from './audio';
-import { burst, floatText, bigWin, centerOf, shake, flash } from './fx';
+import { burst, floatText, bigWin, centerOf, shake, flash, flyCoins } from './fx';
+import { pxUrl } from './px';
+import { FLOORS, hotGame } from '../core/content';
 import { goldIcon, toast, icon, modal } from './ui';
 import * as E from '../core/economy';
 import type { GameDef } from '../core/content';
@@ -21,6 +23,7 @@ export interface GameCtx {
   say(text: string, cls?: '' | 'win' | 'lose'): void;
   root: HTMLElement;
   addCleanup(f: () => void): void;
+  lockVariants?(on: boolean): void;
 }
 export type GameMount = (ctx: GameCtx) => void | (() => void);
 
@@ -52,7 +55,12 @@ export function buildGameShell(def: GameDef, mount: GameMount, onBack: () => voi
   const ctrlWrap = h('div', 'controls', result, controls, betbar);
   const back = h('button', { class: 'iconbtn', 'aria-label': 'Back', onclick: () => { if (isBusy) { toast(['Finish the round first.']); return; } leave(); } }, icon('arrow_counterclockwise'));
   const info = h('button', { class: 'iconbtn', 'aria-label': 'Rules', onclick: () => modal(close => [h('h3', 'h2 gild', def.name), h('p', {}, def.how), h('p', 'muted small', `Return to player: ${def.rtp}. Table limit ${E.fmt(E.minBet())}–${E.fmt(E.maxBet())}.`), h('button', { class: 'btn', onclick: close }, 'Understood')]) }, icon('book_open'));
-  const root = h('div', 'game', h('div', 'ghead', back, h('div', 'title h1 gild', def.name), info), variantsBar, h('div', 'stage panel frame', stage), ctrlWrap);
+  const fl = FLOORS.find(f => f.id === def.floor)!;
+  const candle = (side: string) => h('div', { class: `candle ${side}`, style: { backgroundImage: `url(${pxUrl('default_torch_on_floor_animated')})` } });
+  const stageBox = h('div', 'stage panel frame', h('div', { class: 'stage-tile', style: { backgroundImage: `url(${pxUrl(fl.tile)})` } }), h('div', 'stage-glow'), candle('l'), candle('r'), stage);
+  const title = h('div', 'title', h('div', 'h1 gild', def.name), def.id === hotGame() ? h('div', 'hot-tag', '🜂 hot table · double infamy') : null);
+  const root = h('div', 'game', h('div', 'ghead', back, title, info), variantsBar, stageBox, ctrlWrap);
+  root.dataset.floor = def.floor;
   function leave(): void { cleanups.forEach(f => f()); E.endRound(); onBack(); }
   function setBet(v: number): void {
     const L = ladder();
@@ -103,6 +111,8 @@ export function buildGameShell(def: GameDef, mount: GameMount, onBack: () => voi
       if (r.paid > stake) {
         if (!quiet) {
           floatText(x, y, '+' + E.fmt(r.paid), 'gold');
+          flyCoins(x, y, Math.min(24, 6 + Math.round(Math.log2(r.mult + 1) * 4)));
+          stageBox.classList.remove('won'); void stageBox.offsetWidth; stageBox.classList.add('won');
           burst(x, y, { n: Math.min(60, 14 + Math.round(r.mult * 3)) });
           sfx.win(Math.min(4, Math.ceil(Math.log2(r.mult + 1))));
         }

@@ -46,17 +46,17 @@ export const GAMES: GameDef[] = [
     how: '10 lines, 5 reels. Crowned skulls are wild, three bare skulls start free spins. Five crowned skulls on a line win the Proprietor’s Hoard.' },
   { id: 'hilo', floor: 'parlor', name: 'Hi-Lo Ladder', tag: 'Climb the cards', rank: 3, icon: 'card', rtp: '99%', risk: 2,
     how: 'Guess whether the next card is higher-or-equal or lower-or-equal. Each guess multiplies your stake; cash out whenever you dare. The Skull Deck pays more, but a skull ends everything.' },
-  { id: 'blackjack', floor: 'salon', name: 'Blackjack', tag: 'Classic · Hellfire', rank: 4, icon: 'card', rtp: '~99%', risk: 2,
-    how: 'Six decks, dealer stands on all 17s. Double on any two cards, split once. Hellfire pays 2:1 blackjacks, 3:2 on any 21 and wins five-card charlies — but a dealer 22 is a push.' },
+  { id: 'blackjack', floor: 'salon', name: 'Blackjack', tag: 'Classic · Hellfire · Blood Pair', rank: 4, icon: 'card', rtp: '~99%', risk: 2,
+    how: 'Six decks, dealer stands on all 17s. Double on any two cards, split once. The Blood Pair side bet pays 6:1, 12:1 or 25:1 when your first two cards pair (≈94%). Hellfire pays 2:1 blackjacks, 3:2 on any 21 and wins five-card charlies — but a dealer 22 is a push.' },
   { id: 'roulette', floor: 'salon', name: 'Wheel of Thorns', tag: 'European · Devil’s wheel', rank: 5, icon: 'wheel', rtp: '97.3%', risk: 2,
     how: 'Single-zero roulette. On the Devil’s Wheel, up to three numbers are cursed before each spin: straight-up bets pay 29:1, or ×50 to ×500 on a cursed number.' },
-  { id: 'poker', floor: 'salon', name: 'Jacks of the Damned', tag: 'Video poker · double-up', rank: 6, icon: 'card', rtp: '99.5%', risk: 2,
-    how: 'Jacks or Better, full 9/6 pay. Hold, draw, and after any win gamble it double-or-nothing on red or black — up to five times.' },
+  { id: 'poker', floor: 'salon', name: 'Jacks of the Damned', tag: 'Jacks or Better · Deuces Wild', rank: 6, icon: 'card', rtp: '≤99.5%', risk: 2,
+    how: 'Jacks or Better at full 9/6 pay (99.5% with perfect play), or Deuces Wild on the stingy Abyss table (about 96% at best). Hold, draw, and after any win gamble it double-or-nothing on red or black — up to five times.' },
   { id: 'baccarat', floor: 'salon', name: 'Baccarat Noir', tag: 'Player · Banker · Tie', rank: 7, icon: 'card', rtp: '98.9%', risk: 1,
     how: 'Eight decks, standard drawing rules. Player 1:1, Banker 0.95:1, Tie 8:1, pairs 11:1. The bead road remembers.' },
   { id: 'mines', floor: 'catacombs', name: 'Crypt Delve', tag: 'Ossuary · Crypt · Labyrinth', rank: 8, icon: 'default_diamond', rtp: '97%', risk: 3,
     how: 'Open tombs for gems. Each gem grows the multiplier; one curse takes everything. Choose how many curses lie buried and cash out any time.' },
-  { id: 'plinko', floor: 'catacombs', name: 'Bone Drop', tag: '8–16 rows · 3 risks', rank: 9, icon: 'default_snowball', rtp: '98%', risk: 3,
+  { id: 'plinko', floor: 'catacombs', name: 'Bone Drop', tag: '8–16 rows · volleys of ten', rank: 9, icon: 'default_snowball', rtp: '98%', risk: 3,
     how: 'Drop a skull through the bone pegs. Edges pay the most. More rows and higher risk widen the extremes.' },
   { id: 'scratch', floor: 'catacombs', name: 'Grave Tickets', tag: 'Scratch three tiers', rank: 10, icon: 'default_coal_lump', rtp: '~95%', risk: 3,
     how: 'Scratch the grave dirt. Three matching symbols win that prize. Obsidian tickets cost 25 stakes and hide ×5000.' },
@@ -138,3 +138,39 @@ export const FEATS: FeatDef[] = [
   { id: 'abyss', name: 'Into the Abyss', desc: 'Open the fourth floor.', souls: 2 },
   { id: 'freedom', name: 'Soul Redeemed', desc: 'Buy back your soul.', souls: 10 },
 ];
+
+/* ---------------- host story arcs: favor earned by playing on a floor ---------------- */
+export interface ArcStage { at: number; title: string; lines: string[]; gold: number; souls: number }
+export const HOST_ARCS: Record<FloorId, ArcStage[]> = {
+  parlor: [
+    { at: 0, title: 'A New Face', gold: 6, souls: 0, lines: ['Welcome to my parlour, darling. Coins, dice, a few cursed machines — the little sins.', 'Play well and I shall remember your name. Play badly and I shall remember it longer.'] },
+    { at: 40, title: 'Regular', gold: 15, souls: 1, lines: ['Forty rounds and still breathing. I had a wager with Corvin that you would not last thirty.', 'Take this — my winnings. You earned half of them.'] },
+    { at: 150, title: 'Vesper’s Favourite', gold: 40, souls: 2, lines: ['Do you know what happened to my last favourite? He went downstairs.', 'Nobody comes back up the same. Here — for the journey.'] },
+    { at: 400, title: 'Heir of the Parlor', gold: 120, souls: 4, lines: ['You have played my tables more than I have. I think the parlour belongs to you now.', 'Keep my chair warm. I am going to see what is under the Abyss.'] },
+  ],
+  salon: [
+    { at: 0, title: 'Guest of Honour', gold: 8, souls: 0, lines: ['Sir Corvin, at your service. Here the cards remember every hand.', 'Cheat, and they will tell me. Lose, and they will tell everyone.'] },
+    { at: 40, title: 'Card-Sworn', gold: 18, souls: 1, lines: ['You play like a knight — straight into the lance. Admirable. Expensive.', 'A token from the house, so you may keep charging.'] },
+    { at: 150, title: 'Knight of the Felt', gold: 45, souls: 2, lines: ['I once wagered my soul on a single hand of blackjack. I drew to sixteen.', 'I still wonder what the next card was. Do not become me.'] },
+    { at: 400, title: 'Lord of the Salon', gold: 140, souls: 4, lines: ['I yield. The salon is yours, and my debts with it.', 'Read the ledger carefully. My name is on page one.'] },
+  ],
+  catacombs: [
+    { at: 0, title: 'Seeker', gold: 10, souls: 0, lines: ['I cannot see you, but I hear your purse. It is lighter than you think.', 'Down here the dead play too. Mind your manners.'] },
+    { at: 40, title: 'Grave-Friend', gold: 22, souls: 1, lines: ['The spirits like you. They whisper your name between the summonings.', 'They asked me to give you this. I did not ask why.'] },
+    { at: 150, title: 'Bone-Reader', gold: 55, souls: 2, lines: ['I saw your ending once, before I lost my eyes.', 'It was very bright. Gold, or fire — I could never tell which.'] },
+    { at: 400, title: 'Voice of the Dead', gold: 160, souls: 5, lines: ['Take my sight. It is only a little used.', 'Now you will see what the Proprietor keeps behind the mirror.'] },
+  ],
+  abyss: [
+    { at: 0, title: 'Signed', gold: 12, souls: 1, lines: ['So. You came all the way down. They always do.', 'Everything here is mine — including, for now, you.'] },
+    { at: 40, title: 'Debtor of Note', gold: 30, souls: 2, lines: ['Your ledger grows interesting. Half red, half gold.', 'I like interesting. Here — interest.'] },
+    { at: 150, title: 'Rival', gold: 70, souls: 3, lines: ['You frighten my other guests. I find that I do not mind.', 'Perhaps one day you will sit on my side of the table.'] },
+    { at: 400, title: 'Heir Apparent', gold: 200, souls: 6, lines: ['Very well. When you buy back your soul, buy mine too.', 'I have been down here a very long time.'] },
+  ],
+};
+/** One table a day plays hot: double infamy. */
+export function hotGame(day = Math.floor(Date.now() / 86400000)): GameId {
+  const ids = GAMES.map(g => g.id);
+  let x = (day * 2654435761) >>> 0;
+  x ^= x >>> 13; x = Math.imul(x, 1274126177) >>> 0;
+  return ids[x % ids.length];
+}

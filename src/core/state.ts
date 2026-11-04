@@ -24,6 +24,8 @@ export interface Save {
   variants: Partial<Record<GameId, string>>;
   settings: { sfx: boolean; music: boolean; motion: boolean; volume: number };
   intro: boolean;
+  favor: Partial<Record<FloorId, number>>;
+  arc: Partial<Record<FloorId, number>>;
 }
 const KEY = 'velvet-abyss-v1';
 export function freshSave(): Save {
@@ -32,7 +34,7 @@ export function freshSave(): Save {
     stats: { wagered: 0, won: 0, rounds: 0, wins: 0, biggestWin: 0, biggestMult: 0, peakGold: 500, streak: 0, cold: 0, contractsDone: 0, loans: 0, started: Date.now() },
     games: {}, relics: {}, pact: null, loan: null, contracts: [], contractSeq: 1, feats: {},
     lastTithe: 0, floorsSeen: ['parlor'], hoard: 5000, bets: {}, variants: {},
-    settings: { sfx: true, music: true, motion: true, volume: 0.8 }, intro: false,
+    settings: { sfx: true, music: true, motion: true, volume: 0.8 }, intro: false, favor: {}, arc: {},
   };
 }
 export function loadSave(): Save {

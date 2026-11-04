@@ -185,6 +185,7 @@ export const reelsGame: GameMount = ctx => {
   let offsets = [0, 0, 0, 0, 0];
   let strips: number[][] = grid.map(r => [...r]);
   let winLines: { line: number; count: number }[] = [];
+  let anticip = -1;
   let spinning = false, auto = 0;
   let pulse = 0;
   function sym(i: number): HTMLCanvasElement { return pxCanvas(m.symbols[Math.min(i, m.symbols.length - 1)].sprite); }
@@ -205,6 +206,10 @@ export const reelsGame: GameMount = ctx => {
         c.drawImage(sym(strip[idx]), x + 10, y + 10, CELL - 20, CELL - 20);
       }
       c.fillStyle = 'rgba(0,0,0,.5)'; c.fillRect(x + CELL - 1, 0, 1, H);
+      if (spinning && anticip >= 0 && r >= anticip) {
+        const a = 0.25 + 0.2 * Math.sin(performance.now() / 80);
+        c.fillStyle = `rgba(120,220,255,${a})`; c.fillRect(x + 2, 0, CELL - 4, H);
+      }
     }
     const g = c.createLinearGradient(0, 0, 0, H);
     g.addColorStop(0, 'rgba(0,0,0,.6)'); g.addColorStop(0.18, 'rgba(0,0,0,0)'); g.addColorStop(0.82, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.6)');
@@ -215,7 +220,13 @@ export const reelsGame: GameMount = ctx => {
       c.lineWidth = 4; c.strokeStyle = `hsla(${30 + wl.line * 25}, 100%, 65%, .95)`; c.shadowColor = '#ff9a3c'; c.shadowBlur = 12;
       c.beginPath(); line.forEach((row, reel) => { const px_ = reel * CELL + CELL / 2, py = row * CELL + CELL / 2; if (reel === 0) c.moveTo(px_, py); else c.lineTo(px_, py); }); c.stroke();
       c.shadowBlur = 0;
-      for (let reel = 0; reel < wl.count; reel++) { c.strokeStyle = '#ffe08a'; c.lineWidth = 2; c.strokeRect(reel * CELL + 4, line[reel] * CELL + 4, CELL - 8, CELL - 8); }
+      const pz = 1 + 0.12 * Math.abs(Math.sin(pulse / 8));
+      for (let reel = 0; reel < wl.count; reel++) {
+        const cx = reel * CELL + CELL / 2, cy = line[reel] * CELL + CELL / 2, sz = (CELL - 20) * pz;
+        c.fillStyle = 'rgba(255,200,90,.18)'; c.fillRect(reel * CELL + 3, line[reel] * CELL + 3, CELL - 6, CELL - 6);
+        c.drawImage(sym(grid[reel][line[reel]]), cx - sz / 2, cy - sz / 2, sz, sz);
+        c.strokeStyle = '#ffe08a'; c.lineWidth = 2; c.strokeRect(reel * CELL + 4, line[reel] * CELL + 4, CELL - 8, CELL - 8);
+      }
     }
   }
   let raf = 0;
@@ -233,6 +244,12 @@ export const reelsGame: GameMount = ctx => {
     offsets = dist.map(() => 0);
     const t0 = performance.now();
     const durs = [700, 900, 1100, 1300, 1500].map(d => d * (inFree ? 0.6 : 1));
+    // anticipation: two skulls showing on the first reels slows the rest down
+    let sc = 0;
+    for (let r = 0; r < 5; r++) {
+      if (sc >= 2) { for (let k = r; k < 5; k++) durs[k] += 900 * (k - r + 1); anticip = r; break; }
+      sc += res.grid[r].filter(i => m.symbols[i].scatter).length;
+    }
     const stopped = [false, false, false, false, false];
     await new Promise<void>(resolve => {
       const f = (now: number) => {
@@ -242,6 +259,7 @@ export const reelsGame: GameMount = ctx => {
           const e = t < 1 ? 1 - Math.pow(1 - t, 3) : 1;
           const bounce = t < 1 ? 0 : 0;
           offsets[r] = -dist[r] * (1 - e) + bounce;
+          if (anticip >= 0 && r >= anticip && t < 1 && t > 0.3 && Math.random() < 0.15) sfx.heartbeat();
           if (t >= 1 && !stopped[r]) { stopped[r] = true; sfx.reelStop(r); if (res.grid[r].some(i => m.symbols[i].scatter)) sfx.tone(880 + r * 120, 0.25, 'sine', 0.12); }
           if (t < 1) all = false;
         }
@@ -252,6 +270,7 @@ export const reelsGame: GameMount = ctx => {
     });
     strips = res.grid.map(col => [...col]);
     offsets = [0, 0, 0, 0, 0];
+    anticip = -1;
     grid = res.grid;
     spinning = false;
     if (res.expanded.length) { sfx.tone(220, 0.6, 'sawtooth', 0.08, 0, true); }
@@ -293,7 +312,7 @@ export const reelsGame: GameMount = ctx => {
       coinShower(150); ctx.say(`THE PROPRIETOR'S HOARD! +${fmt(hoardWin)}`, 'win');
     }
     const r = ctx.settle(stake, payout, cv);
-    if (!jackpot) ctx.say(payout > 0 ? `Won ${fmt(r.paid)} (${mfmt(r.mult)})` : first.res.scatters === 2 ? 'Two skulls… so close.' : '', payout > 0 ? 'win' : '');
+    if (!jackpot) ctx.say(payout > 0 ? `${r.mult >= 1 ? 'Won' : 'Returned'} ${fmt(r.paid)} (${mfmt(r.mult)})` : first.res.scatters === 2 ? 'Two skulls… so close.' : '', payout > 0 ? 'win' : '');
     (hoard.querySelector('b') as HTMLElement).textContent = fmt(S.hoard);
     ctx.busy(false);
     if (auto > 0) { auto--; renderControls(); await sleep(payout > stake * 5 ? 2600 : 450); if (auto > 0 || auto === 0) { if (auto >= 0 && autoArmed) void spin(); } }

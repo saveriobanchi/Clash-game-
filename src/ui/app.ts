@@ -2,12 +2,13 @@ import { h, A, clear, sleep } from './dom';
 import { px } from './px';
 import { sfx } from './audio';
 import { setFloor } from './bg';
-import { burst, coinShower, floatText, rise, centerOf, setMotion } from './fx';
+import { burst, coinShower, floatText, rise, centerOf, setMotion, floorCard, flyCoins } from './fx';
+import { pxUrl } from './px';
 import { icon, goldIcon, soulIcon, skulls, toast, modal, confirmBox } from './ui';
 import { buildGameShell } from './shell';
 import { GAME_VIEWS } from './games';
 import * as E from '../core/economy';
-import { FLOORS, GAMES, RELICS, PACTS, FEATS, FloorId, GameDef, gameById } from '../core/content';
+import { FLOORS, GAMES, RELICS, PACTS, FEATS, FloorId, GameDef, gameById, HOST_ARCS, hotGame } from '../core/content';
 import { exportSave, importSave } from '../core/state';
 import { cardImg } from './games/common';
 
@@ -41,9 +42,12 @@ function title(): void {
     if (!E.S.intro) intro(); else shell();
   } }, E.S.intro ? 'Descend' : 'Enter');
   const scr = h('div', 'title-screen',
+    h('div', { class: 'fog f1', style: { backgroundImage: `url(${A('fx/smoke_04.png')})` } }), h('div', { class: 'fog f2', style: { backgroundImage: `url(${A('fx/smoke_07.png')})` } }),
+    h('div', 'title-halo'),
     h('img', { class: 'title-portrait', src: A('portraits/proprietor.webp'), alt: '' }),
     h('h1', 'logo h1 gild', 'Velvet', h('br'), 'Abyss'),
     h('div', 'logo-sub', 'a casino beneath the world'),
+    h('div', 'title-hosts', ...['vesper', 'corvin', 'oracle'].map(n => h('img', { src: A(`portraits/${n}.webp`), alt: '' }))),
     enter,
     h('div', 'title-foot', 'Play money only. Nothing here can be bought, and nothing can be cashed out.'));
   document.body.append(scr);
@@ -87,6 +91,7 @@ function renderHud(): void {
     if (c > 0) { const [x, y] = centerOf(ev.currentTarget as Element); floatText(x, y + 30, '+' + E.fmt(c)); burst(x, y, { n: 16 }); sfx.coin(); }
     else toast(['Rakeback collects here. ', E.rakeback() > 0 ? `You earn ${(E.rakeback() * 100).toFixed(1)}% of every wager.` : 'Buy the Gilded Tooth to earn it.']);
   } }, icon('hand_token'));
+  shownGold = S.gold;
   hud.append(
     h('div', { class: 'hud-avatar', onclick: () => show('ledger') }, h('img', { src: A('portraits/wagerer.webp'), alt: 'You' }), h('div', 'hud-rank', String(S.rank))),
     h('div', 'hud-mid',
@@ -96,12 +101,23 @@ function renderHud(): void {
       h('div', 'xpbar', h('i', { style: { width: pct + '%' } }))),
     comps);
 }
-let lastGold = 0;
+let shownGold = -1, goldAnim = 0;
+function tickGold(el: HTMLElement, to: number): void {
+  if (shownGold < 0 || !E.S.settings.motion) { shownGold = to; el.textContent = E.fmt(to); return; }
+  const from = shownGold, t0 = performance.now(), dur = to > from ? 900 : 350;
+  cancelAnimationFrame(goldAnim);
+  const f = (now: number) => {
+    const t = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - t, 3);
+    shownGold = from + (to - from) * e; el.textContent = E.fmt(shownGold);
+    el.parentElement?.classList.toggle('rising', t < 1 && to > from);
+    if (t < 1) goldAnim = requestAnimationFrame(f);
+  };
+  goldAnim = requestAnimationFrame(f);
+}
 function refreshHud(): void {
   if (!hud || !hud.isConnected) return;
   const g = document.getElementById('gold'), s = document.getElementById('souls');
-  if (g) { g.textContent = E.fmt(E.S.gold); if (E.S.gold > lastGold + 0.001) g.parentElement!.classList.add('bump'), setTimeout(() => g.parentElement?.classList.remove('bump'), 400); }
-  lastGold = E.S.gold;
+  if (g) tickGold(g, E.S.gold);
   if (s) s.textContent = String(E.S.souls);
   const bar = hud.querySelector('.xpbar i') as HTMLElement | null;
   if (bar) bar.style.width = Math.min(100, (E.S.xp / E.xpFor(E.S.rank)) * 100) + '%';
@@ -174,14 +190,22 @@ function casinoScreen(): void {
     const unlocked = E.floorUnlocked(f.id);
     const b = h('button', { class: `floor-tab ${f.id === floor ? 'on' : ''} ${unlocked ? '' : 'locked'}`, 'aria-label': f.name, onclick: () => {
       if (!unlocked) { toast([h('b', {}, f.name), ` opens at infamy rank ${f.rank}.`]); return; }
-      floor = f.id; sfx.whoosh(); show('casino');
+      if (f.id === floor) return;
+      floor = f.id; void floorCard(f.sub, f.name, f.host, f.lore); setTimeout(() => show('casino'), 350);
     } }, h('img', { src: A(`portraits/${f.host}.webp`), alt: '' }), h('span', 'roman', ['I', 'II', 'III', 'IV'][i]));
     if (!unlocked) b.append(h('div', 'lock', h('div', {}, icon('lock_closed'), h('div', {}, 'R' + f.rank))));
     tabs.append(b);
   });
+  const arcs = HOST_ARCS[floor], stage = E.arcStage(floor);
+  const nextAt = arcs[stage]?.at, prevAt = stage ? arcs[stage - 1].at : 0, fav = E.S.favor[floor] ?? 0;
+  const favPct = nextAt === undefined ? 100 : Math.min(100, ((fav - prevAt) / Math.max(1, nextAt - prevAt)) * 100);
+  const pending = E.pendingArc(floor);
   const hero = h('div', 'hero panel frame',
-    h('div', 'hero-portrait', h('img', { src: A(`portraits/${fl.host}.webp`), alt: fl.hostName })),
-    h('div', {}, h('div', 'sub', `${fl.sub} · ${fl.hostName}`), h('h2', 'h1 gild', fl.name), h('p', 'lore', fl.lore)));
+    h('div', { class: 'hero-portrait' + (pending ? ' calling' : ''), onclick: () => { if (E.pendingArc(floor)) hostDialog(floor); } }, h('img', { src: A(`portraits/${fl.host}.webp`), alt: fl.hostName }), pending ? h('div', 'speak-bubble', '!') : null),
+    h('div', { style: { flex: '1', minWidth: '0' } }, h('div', 'sub', `${fl.sub} · ${fl.hostName}`), h('h2', 'h1 gild', fl.name), h('p', 'lore', fl.lore),
+      h('div', 'favor', h('span', {}, E.hostTitle(floor)), h('div', 'prog', h('i', { style: { width: favPct + '%' } })), h('span', 'num', nextAt === undefined ? 'max' : `${fav}/${nextAt}`))));
+  if (pending && !arcShown.has(floor + stage)) { arcShown.add(floor + stage); setTimeout(() => hostDialog(floor), 500); }
+  main.style.setProperty('--tile', `url(${pxUrl(fl.tile)})`);
   const grid = h('div', 'games');
   for (const g of GAMES.filter(x => x.floor === floor)) {
     const unlocked = E.gameUnlocked(g.id);
@@ -195,6 +219,7 @@ function casinoScreen(): void {
       h('div', 'body', h('div', 'name', g.name), h('div', 'tag', g.tag), h('div', 'meta', h('span', {}, 'RTP ' + g.rtp), skulls(g.risk))));
     if (!unlocked) card.append(h('div', 'lockbar', 'Rank ' + g.rank));
     if (fresh) card.append(h('div', 'newtag', 'NEW'));
+    if (unlocked && g.id === hotGame()) { card.classList.add('hot'); card.append(h('div', 'hottag', 'HOT ×2')); }
     grid.append(card);
   }
   main.append(tabs, hero);
@@ -214,6 +239,30 @@ function casinoScreen(): void {
     h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px', gap: '8px' } },
       h('div', 'muted small', E.S.cycle ? `Cycle ${E.S.cycle + 1} · ${E.S.sigils} sigil${E.S.sigils > 1 ? 's' : ''} (limits ×${E.sigilMult().toFixed(2)})` : 'Buy it back to break the cycle — and begin again, stronger.'),
       h('button', { class: 'btn sm blood', disabled: E.S.gold < price ? true : undefined, onclick: redeem }, 'Redeem'))));
+}
+const arcShown = new Set<string>();
+function hostDialog(f: FloorId): void {
+  const st = E.pendingArc(f);
+  if (!st) return;
+  const fl = FLOORS.find(x => x.id === f)!;
+  let i = 0;
+  const speech = h('div', 'speech', st.lines[0]);
+  const next = h('button', { class: 'btn blood wide', style: { marginTop: '14px' } }, st.lines.length > 1 ? 'Continue' : 'Accept');
+  const close = modal(() => [h('div', 'sub-title', `${fl.hostName} · ${st.title}`), h('div', 'dialog big', h('img', { src: A(`portraits/${fl.host}.webp`), alt: '' }), speech), next], { blood: f === 'abyss', dismiss: false });
+  sfx.play('fan', 0.5);
+  next.onclick = (ev: Event) => {
+    sfx.click(); i++;
+    if (i < st.lines.length) { speech.textContent = st.lines[i]; if (i === st.lines.length - 1) next.textContent = 'Accept the gift'; return; }
+    const [x, y] = centerOf(ev.currentTarget as Element);
+    const r = E.claimArc(f);
+    close();
+    if (r) {
+      flyCoins(x, y, 20); sfx.win(3);
+      toast([h('b', {}, `${st.title}. `), `+${E.fmt(r.gold)} gold${r.souls ? `, +${r.souls} soul${r.souls > 1 ? 's' : ''}` : ''}`], 'gold', h('img', { src: A(`portraits/${fl.host}.webp`), width: 32, alt: '' }));
+      if (r.souls) rise(x, y, '#7fe6ff');
+    }
+    if (tab === 'casino') setTimeout(() => show('casino'), 300);
+  };
 }
 function titheWheel(): void {
   const c = h('canvas'); c.width = c.height = 300; c.style.cssText = 'width:240px;height:240px;margin:6px auto;display:block';
@@ -423,6 +472,7 @@ function wireEvents(): void {
       case 'soul': toast([h('b', {}, `+${ev.n} soul. `), ev.why], 'soul', soulIcon(32)); rise(innerWidth / 2, innerHeight / 2, '#7fe6ff'); sfx.soul(); break;
       case 'toast': toast([ev.text], ev.kind ?? ''); break;
       case 'floor': { const f = FLOORS.find(x => x.id === ev.id)!; toast([h('b', {}, `${f.name} is open. `), f.lore], 'blood', h('img', { src: A(`portraits/${f.host}.webp`), width: 36, alt: '' })); break; }
+      case 'host': { const f = FLOORS.find(x => x.id === ev.floor)!; toast([h('b', {}, f.hostName), ' wishes a word with you.'], 'gold', h('img', { src: A(`portraits/${f.host}.webp`), width: 32, alt: '' })); break; }
       case 'game': { const g = gameById(ev.id); toast([h('b', {}, 'New table: '), g.name], 'gold', px('td45', 32)); break; }
     }
   });

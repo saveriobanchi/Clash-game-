@@ -6,6 +6,7 @@ import { fmt } from '../core/economy';
 /* One full-screen canvas for particles: Kenney Particle Pack textures tinted on the fly + pixel-art coins. */
 interface P { x: number; y: number; vx: number; vy: number; life: number; max: number; size: number; rot: number; vr: number; img: CanvasImageSource; add: boolean; grav: number; fade: number; px?: boolean }
 const parts: P[] = [];
+let drawFlyers: ((dt: number) => void) | null = null;
 let cvs: HTMLCanvasElement, ctx: CanvasRenderingContext2D;
 const tex = new Map<string, HTMLImageElement>();
 const tinted = new Map<string, HTMLCanvasElement>();
@@ -40,6 +41,7 @@ export function initFx(): void {
       ctx.restore();
     }
     ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+    drawFlyers?.(dt);
     requestAnimationFrame(loop);
   };
   requestAnimationFrame(loop);
@@ -97,15 +99,15 @@ export function flash(color = 'rgba(255,40,40,.35)'): void {
 }
 export const centerOf = (el: Element): [number, number] => { const r = el.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; };
 
-const TITLES: [number, string, string][] = [[1000, 'APOCALYPSE', 'mirror'], [250, 'DAMNATION', 'ember'], [100, 'PORTENT', 'thorn'], [25, 'BLOOD FORTUNE', 'veil'], [10, 'OMEN', 'ember']];
+const TITLES: [number, string, string, string][] = [[1000, 'APOCALYPSE', 'mirror', 't5'], [250, 'DAMNATION', 'ember', 't4'], [100, 'PORTENT', 'thorn', 't3'], [25, 'BLOOD FORTUNE', 'veil', 't2'], [10, 'OMEN', 'ember', 't1']];
 let bigOpen = false;
 /** Full-screen celebration for wins of ×10 and up. */
 export async function bigWin(mult: number, amount: number): Promise<void> {
   if (bigOpen) return;
   bigOpen = true;
-  const [, title, emblem] = TITLES.find(t => mult >= t[0]) ?? TITLES[TITLES.length - 1];
+  const [, title, emblem, tier] = TITLES.find(t => mult >= t[0]) ?? TITLES[TITLES.length - 1];
   const amt = h('div', 'bw-amount', '0');
-  const ov = h('div', 'bigwin',
+  const ov = h('div', `bigwin ${tier}`,
     h('div', 'bw-rays'),
     h('img', { class: 'bw-emblem', src: A(`emblems/${emblem}.webp`), alt: '' }),
     h('div', 'bw-title', title),
@@ -114,7 +116,9 @@ export async function bigWin(mult: number, amount: number): Promise<void> {
     h('div', 'bw-tap', 'tap to continue'));
   document.body.append(ov);
   sfx.bigWin();
-  coinShower(mult >= 100 ? 90 : 50);
+  coinShower(mult >= 1000 ? 160 : mult >= 100 ? 90 : 50);
+  if (mult >= 100) { const app = document.getElementById('app'); if (app) shake(app, mult >= 1000 ? 2.5 : 1.4); }
+  if (mult >= 250) setTimeout(() => burst(innerWidth / 2, innerHeight * 0.4, { n: 80, speed: 600, size: 60, colors: ['#ff2a3a', '#ffd27a', '#fff'] }), 600);
   burst(innerWidth / 2, innerHeight * 0.4, { n: 60, speed: 420, size: 50 });
   let done = false;
   const close = () => { if (done) return; done = true; ov.classList.add('out'); setTimeout(() => ov.remove(), 400); bigOpen = false; };
@@ -123,4 +127,54 @@ export async function bigWin(mult: number, amount: number): Promise<void> {
   sfx.coin();
   await sleep(1800);
   close();
+}
+
+/* ---------- coins that fly into the gold counter ---------- */
+interface Flyer { x0: number; y0: number; cx: number; cy: number; t: number; d: number; delay: number; img: CanvasImageSource; s: number; done: boolean }
+const flyers: Flyer[] = [];
+export function flyCoins(x: number, y: number, n = 10, onArrive?: () => void): void {
+  const target = document.getElementById('gold');
+  if (!motion || !target) { onArrive?.(); return; }
+  const r = target.getBoundingClientRect();
+  const tx = r.left + 10, ty = r.top + r.height / 2;
+  for (let i = 0; i < n; i++) {
+    flyers.push({ x0: x + (Math.random() - 0.5) * 60, y0: y + (Math.random() - 0.5) * 40, cx: x + (Math.random() - 0.5) * 240, cy: Math.min(y, ty) - 60 - Math.random() * 120, t: 0, d: 0.65 + Math.random() * 0.3, delay: i * 0.035, img: pxCanvas(i % 4 === 0 ? 'default_gold_ingot' : 'default_gold_lump'), s: 18 + Math.random() * 8, done: false });
+  }
+  const prevDone = onArrive;
+  pendingArrive.push(() => prevDone?.());
+  drawFlyers = (dt: number) => {
+    for (const f of flyers) {
+      if (f.done) continue;
+      if (f.delay > 0) { f.delay -= dt; continue; }
+      f.t += dt / f.d;
+      if (f.t >= 1) {
+        f.done = true;
+        sfx.tone(1900 + Math.random() * 600, 0.04, 'square', 0.02);
+        const pill = target.parentElement; if (pill) { pill.classList.remove('bump'); void pill.offsetWidth; pill.classList.add('bump'); }
+        continue;
+      }
+      const t = f.t * f.t, u = 1 - t;
+      const x_ = u * u * f.x0 + 2 * u * t * f.cx + t * t * tx, y_ = u * u * f.y0 + 2 * u * t * f.cy + t * t * ty;
+      ctx.save(); ctx.imageSmoothingEnabled = false; ctx.globalAlpha = 1;
+      ctx.translate(x_, y_); ctx.rotate(f.t * 8);
+      const sz = f.s * (1 - f.t * 0.4);
+      ctx.drawImage(f.img, -sz / 2, -sz / 2, sz, sz); ctx.restore();
+    }
+    for (let i = flyers.length - 1; i >= 0; i--) if (flyers[i].done) flyers.splice(i, 1);
+    if (!flyers.length) { drawFlyers = null; const cbs = pendingArrive.splice(0); cbs.forEach(c => c()); }
+  };
+}
+const pendingArrive: (() => void)[] = [];
+
+/* ---------- descending onto a new floor ---------- */
+export async function floorCard(sub: string, name: string, host: string, lore: string): Promise<void> {
+  const el = h('div', 'floor-card',
+    h('img', { class: 'fc-host', src: A(`portraits/${host}.webp`), alt: '' }),
+    h('div', 'fc-sub', sub), h('div', 'fc-name', name), h('div', 'fc-lore', lore));
+  document.body.append(el);
+  sfx.whoosh(); sfx.doom();
+  await sleep(motion ? 1700 : 600);
+  el.classList.add('out');
+  await sleep(500);
+  el.remove();
 }
