@@ -1,12 +1,5 @@
-import '@fontsource/cinzel/400.css';
-import '@fontsource/cinzel/700.css';
-import '@fontsource/cinzel-decorative/700.css';
-import '@fontsource/cinzel-decorative/900.css';
-import '@fontsource/spectral/400.css';
-import '@fontsource/spectral/400-italic.css';
-import '@fontsource/pixelify-sans/400.css';
-import '@fontsource/vt323/400.css';
 import '@fontsource/jacquard-24/400.css';
+import '@fontsource/jersey-15/400.css';
 import './styles.css';
 import './games.css';
 import { loadPixels } from './ui/px';

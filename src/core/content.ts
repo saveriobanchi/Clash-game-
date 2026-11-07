@@ -7,24 +7,24 @@ export interface Floor {
 }
 export const FLOORS: Floor[] = [
   {
-    id: 'parlor', name: 'The Gilded Parlor', sub: 'Floor I', host: 'vesper', hostName: 'Lady Vesper', rank: 1,
-    tile: 'red_wood_plank_2', accent: '#e0b062', glow: '#ff9a3c', emblem: 'ember',
-    lore: '“Everyone starts with coins and dice, darling. Nobody stays with them.”',
+    id: 'parlor', name: 'The Gilded Parlor', sub: 'Floor I', host: 'moth', hostName: 'Mother Moth', rank: 1,
+    tile: '', accent: '#f6d27a', glow: '#f2783a', emblem: 'moth',
+    lore: '“Everyone flies toward the gold, little one. Mind the flame.”',
   },
   {
-    id: 'salon', name: 'The Velvet Salon', sub: 'Floor II', host: 'corvin', hostName: 'Sir Corvin', rank: 4,
-    tile: 'default_obsidian_brick', accent: '#c9485b', glow: '#ff3b5c', emblem: 'thorn',
-    lore: '“Cards remember. Every hand you play is a debt of honour.”',
+    id: 'salon', name: 'The Velvet Salon', sub: 'Floor II', host: 'carrion', hostName: 'Sir Carrion', rank: 4,
+    tile: '', accent: '#d63a4a', glow: '#d63a4a', emblem: 'carrion',
+    lore: '“Cards remember every hand. So do crows.”',
   },
   {
-    id: 'catacombs', name: 'The Catacombs', sub: 'Floor III', host: 'oracle', hostName: 'The Sightless Oracle', rank: 8,
-    tile: 'default_mossycobble', accent: '#7fd6c2', glow: '#4effc8', emblem: 'veil',
-    lore: '“Below the bones the dead still gamble. They have nothing left to lose — have you?”',
+    id: 'catacombs', name: 'The Catacombs', sub: 'Floor III', host: 'marrow', hostName: 'Sister Marrow', rank: 8,
+    tile: '', accent: '#a6f5e2', glow: '#3aa592', emblem: 'marrow',
+    lore: '“I cannot see your face. I can hear your purse.”',
   },
   {
     id: 'abyss', name: 'The Abyss', sub: 'Floor IV', host: 'proprietor', hostName: 'The Proprietor', rank: 13,
-    tile: 'nether_rack_deep', accent: '#ff5a3a', glow: '#ff2a00', emblem: 'mirror',
-    lore: '“Here the stakes are not coin. Sign, and we shall see what you are worth.”',
+    tile: '', accent: '#f2783a', glow: '#9a1f37', emblem: 'proprietor',
+    lore: '“Every mask down here is mine. Including yours.”',
   },
 ];
 
@@ -38,12 +38,12 @@ export interface GameDef {
   how: string;
 }
 export const GAMES: GameDef[] = [
-  { id: 'coin', floor: 'parlor', name: "Fate's Coin", tag: 'Flip · chain · cursed edge', rank: 1, icon: 'default_gold_lump', rtp: '96–98%', risk: 1,
-    how: 'Call heads or tails. Classic pays ×1.96. Streak lets the winnings ride flip after flip. The Cursed coin can land on its edge — ×48.' },
-  { id: 'dice', floor: 'parlor', name: 'Bone Dice', tag: 'Any odds · triple bones', rank: 1, icon: 'die', rtp: '97–98.5%', risk: 2,
+  { id: 'coin', floor: 'parlor', name: "Fate's Coin", tag: 'Flip · chain · cursed edge', rank: 1, icon: 'coin', rtp: '96–98%', risk: 1,
+    how: 'Call mask or skull. Classic pays ×1.96. Streak lets the winnings ride flip after flip. The Cursed coin can land on its edge — ×48.' },
+  { id: 'dice', floor: 'parlor', name: 'Bone Dice', tag: 'Any odds · triple bones', rank: 1, icon: 'die5', rtp: '97–98.5%', risk: 2,
     how: 'Roll Over/Under: set your own chance — from 98% to 1% — and the multiplier follows. Triple Bones: three dice, bet on small, big, totals or triples.' },
-  { id: 'reels', floor: 'parlor', name: 'Reliquary Reels', tag: '3 cursed machines', rank: 2, icon: 'lottachievements_crowned_skull', rtp: '~96%', risk: 3,
-    how: '10 lines, 5 reels. Crowned skulls are wild, three bare skulls start free spins. Five crowned skulls on a line win the Proprietor’s Hoard.' },
+  { id: 'reels', floor: 'parlor', name: 'Reliquary Reels', tag: '3 cursed machines', rank: 2, icon: 'crown_skull', rtp: '~96%', risk: 3,
+    how: '10 lines, 5 reels. Crowned skulls are wild, three open eyes start free spins. Five crowned skulls on a line win the Proprietor’s Hoard.' },
   { id: 'hilo', floor: 'parlor', name: 'Hi-Lo Ladder', tag: 'Climb the cards', rank: 3, icon: 'card', rtp: '99%', risk: 2,
     how: 'Guess whether the next card is higher-or-equal or lower-or-equal. Each guess multiplies your stake; cash out whenever you dare. The Skull Deck pays more, but a skull ends everything.' },
   { id: 'blackjack', floor: 'salon', name: 'Blackjack', tag: 'Classic · Hellfire · Blood Pair', rank: 4, icon: 'card', rtp: '~99%', risk: 2,
@@ -54,25 +54,25 @@ export const GAMES: GameDef[] = [
     how: 'Jacks or Better at full 9/6 pay (99.5% with perfect play), or Deuces Wild on the stingy Abyss table (about 96% at best). Hold, draw, and after any win gamble it double-or-nothing on red or black — up to five times.' },
   { id: 'baccarat', floor: 'salon', name: 'Baccarat Noir', tag: 'Player · Banker · Tie', rank: 7, icon: 'card', rtp: '98.9%', risk: 1,
     how: 'Eight decks, standard drawing rules. Player 1:1, Banker 0.95:1, Tie 8:1, pairs 11:1. The bead road remembers.' },
-  { id: 'mines', floor: 'catacombs', name: 'Crypt Delve', tag: 'Ossuary · Crypt · Labyrinth', rank: 8, icon: 'default_diamond', rtp: '97%', risk: 3,
+  { id: 'mines', floor: 'catacombs', name: 'Crypt Delve', tag: 'Ossuary · Crypt · Labyrinth', rank: 8, icon: 'diamond', rtp: '97%', risk: 3,
     how: 'Open tombs for gems. Each gem grows the multiplier; one curse takes everything. Choose how many curses lie buried and cash out any time.' },
-  { id: 'plinko', floor: 'catacombs', name: 'Bone Drop', tag: '8–16 rows · volleys of ten', rank: 9, icon: 'default_snowball', rtp: '98%', risk: 3,
+  { id: 'plinko', floor: 'catacombs', name: 'Bone Drop', tag: '8–16 rows · volleys of ten', rank: 9, icon: 'skull', rtp: '98%', risk: 3,
     how: 'Drop a skull through the bone pegs. Edges pay the most. More rows and higher risk widen the extremes.' },
-  { id: 'scratch', floor: 'catacombs', name: 'Grave Tickets', tag: 'Scratch three tiers', rank: 10, icon: 'default_coal_lump', rtp: '~95%', risk: 3,
+  { id: 'scratch', floor: 'catacombs', name: 'Grave Tickets', tag: 'Scratch three tiers', rank: 10, icon: 'tombstone', rtp: '~95%', risk: 3,
     how: 'Scratch the grave dirt. Three matching symbols win that prize. Obsidian tickets cost 25 stakes and hide ×5000.' },
-  { id: 'keno', floor: 'catacombs', name: 'Séance', tag: 'Pick 1–10 of 40', rank: 11, icon: 'crystal', rtp: '96%', risk: 3,
+  { id: 'keno', floor: 'catacombs', name: 'Séance', tag: 'Pick 1–10 of 40', rank: 11, icon: 'eye', rtp: '96%', risk: 3,
     how: 'Mark up to ten of forty spirits. Ten are summoned. The more you mark, the wilder the table.' },
-  { id: 'derby', floor: 'catacombs', name: 'Spectral Derby', tag: 'Six damned racers', rank: 12, icon: 'racer', rtp: '95%', risk: 3,
+  { id: 'derby', floor: 'catacombs', name: 'Spectral Derby', tag: 'Six damned racers', rank: 12, icon: 'ghost', rtp: '95%', risk: 3,
     how: 'Back one of six creatures. Odds come from their form; long shots pay long.' },
-  { id: 'crash', floor: 'abyss', name: 'Blood Moon', tag: 'Cash out before it bursts', rank: 13, icon: 'moon', rtp: '97%', risk: 4,
+  { id: 'crash', floor: 'abyss', name: 'Blood Moon', tag: 'Cash out before it bursts', rank: 13, icon: 'blood_moon', rtp: '97%', risk: 4,
     how: 'The blood moon rises and the multiplier climbs. Cash out before it bursts — it can burst at ×1.00 or at ×1000.' },
   { id: 'tower', floor: 'abyss', name: 'Ladder of Souls', tag: '9 floors · 4 sins', rank: 14, icon: 'door', rtp: '97%', risk: 4,
     how: 'Pick a door on each floor; behind one waits a fiend. Higher sins have fewer safe doors and wilder multipliers.' },
   { id: 'ruin', floor: 'abyss', name: 'Wheel of Ruin', tag: 'Low · Mid · Ruin', rank: 15, icon: 'wheel', rtp: '96.7–97%', risk: 4,
     how: 'Thirty segments. The Ruin wheel has twenty-nine blanks and one ×29.' },
-  { id: 'chalice', floor: 'abyss', name: 'Six Chalices', tag: 'Drink, if you dare', rank: 16, icon: 'glass_bottle', rtp: '97%', risk: 5,
+  { id: 'chalice', floor: 'abyss', name: 'Six Chalices', tag: 'Drink, if you dare', rank: 16, icon: 'chalice', rtp: '97%', risk: 5,
     how: 'One chalice is poisoned (or two, or three of twelve). Drink one at a time; each sip multiplies your stake. Stop whenever you like.' },
-  { id: 'bargain', floor: 'abyss', name: "Devil's Bargain", tag: 'Wager your fortune', rank: 18, icon: 'proprietor', rtp: '96%', risk: 5,
+  { id: 'bargain', floor: 'abyss', name: "Devil's Bargain", tag: 'Wager your fortune', rank: 18, icon: 'mask_proprietor', rtp: '96%', risk: 5,
     how: 'Stake a share of everything you own. You and the Proprietor each draw a card; higher wins ×2.08, and ties go to the house. Big bargains pay in souls.' },
 ];
 export const gameById = (id: GameId): GameDef => GAMES.find(g => g.id === id)!;
@@ -81,25 +81,25 @@ export const gameById = (id: GameId): GameDef => GAMES.find(g => g.id === id)!;
 export type RelicId = 'tooth' | 'hourglass' | 'purse' | 'charm' | 'candle' | 'glove' | 'eye' | 'spade' | 'ledger';
 export interface RelicDef { id: RelicId; name: string; max: number; cost: number[]; sprite: string; desc: (lvl: number) => string }
 export const RELICS: RelicDef[] = [
-  { id: 'tooth', name: 'Gilded Tooth', max: 5, cost: [2, 4, 7, 11, 16], sprite: 'default_gold_lump', desc: l => `Rakeback: ${(l * 0.3).toFixed(1)}% of every wager returns to you.` },
-  { id: 'hourglass', name: 'Cracked Hourglass', max: 5, cost: [1, 3, 5, 8, 12], sprite: 'default_glass_detail', desc: l => `+${l * 15}% infamy from every round.` },
-  { id: 'glove', name: 'Velvet Glove', max: 5, cost: [2, 4, 6, 9, 14], sprite: 'default_obsidian_shard', desc: l => `Table limits +${l * 25}%.` },
-  { id: 'purse', name: "Raven's Purse", max: 5, cost: [1, 2, 4, 6, 9], sprite: 'coins_bucket_scrap_gold', desc: l => `The Tithe pays +${l * 30}%.` },
-  { id: 'charm', name: 'Bone Charm', max: 5, cost: [2, 3, 5, 8, 12], sprite: 'default_coral_skeleton', desc: l => `Contracts pay +${l * 25}%.` },
-  { id: 'candle', name: 'Black Candle', max: 4, cost: [3, 6, 10, 15], sprite: 'default_torch_3', desc: l => `Wins of ×20 or more have a ${25 + l * 15}% chance to drop a soul.` },
-  { id: 'ledger', name: "Corvin's Ledger", max: 3, cost: [2, 4, 7], sprite: 'default_steel_ingot', desc: l => `The Proprietor’s loans cost ${30 - l * 8}% interest.` },
-  { id: 'eye', name: "Oracle's Eye", max: 1, cost: [6], sprite: 'default_mese_crystal', desc: () => 'See the odds in Hi-Lo, whispered advice at Blackjack and Jacks.' },
-  { id: 'spade', name: "Gravedigger's Spade", max: 1, cost: [8], sprite: 'default_tool_steelshovel', desc: () => 'Crypt Delve, Ladder of Souls and Six Chalices reveal one safe choice each round.' },
+  { id: 'tooth', name: 'Gilded Tooth', max: 5, cost: [2, 4, 7, 11, 16], sprite: 'ring', desc: l => `Rakeback: ${(l * 0.3).toFixed(1)}% of every wager returns to you.` },
+  { id: 'hourglass', name: 'Cracked Hourglass', max: 5, cost: [1, 3, 5, 8, 12], sprite: 'hourglass', desc: l => `+${l * 15}% infamy from every round.` },
+  { id: 'glove', name: 'Velvet Glove', max: 5, cost: [2, 4, 6, 9, 14], sprite: 'i_hand', desc: l => `Table limits +${l * 25}%.` },
+  { id: 'purse', name: "Raven's Purse", max: 5, cost: [1, 2, 4, 6, 9], sprite: 'chest', desc: l => `The Tithe pays +${l * 30}%.` },
+  { id: 'charm', name: 'Bone Charm', max: 5, cost: [2, 3, 5, 8, 12], sprite: 'skull', desc: l => `Contracts pay +${l * 25}%.` },
+  { id: 'candle', name: 'Black Candle', max: 4, cost: [3, 6, 10, 15], sprite: 'candle', desc: l => `Wins of ×20 or more have a ${25 + l * 15}% chance to drop a soul.` },
+  { id: 'ledger', name: "Carrion's Ledger", max: 3, cost: [2, 4, 7], sprite: 'tome', desc: l => `The Proprietor’s loans cost ${30 - l * 8}% interest.` },
+  { id: 'eye', name: "Marrow's Eye", max: 1, cost: [6], sprite: 'eye', desc: () => 'See the odds in Hi-Lo, whispered advice at Blackjack and Jacks.' },
+  { id: 'spade', name: "Gravedigger's Spade", max: 1, cost: [8], sprite: 'spade_tool', desc: () => 'Crypt Delve, Ladder of Souls and Six Chalices reveal one safe choice each round.' },
 ];
 
 /* ---------------- pacts: temporary dark boons ---------------- */
 export type PactId = 'hunger' | 'avarice' | 'bloodmoon' | 'fortune';
 export interface PactDef { id: PactId; name: string; cost: number; rounds: number; desc: string; sprite: string }
 export const PACTS: PactDef[] = [
-  { id: 'hunger', name: 'Pact of Hunger', cost: 1, rounds: 40, desc: 'Double infamy for 40 rounds.', sprite: 'td92' },
-  { id: 'avarice', name: 'Pact of Avarice', cost: 3, rounds: 50, desc: '+2.5% rakeback on every wager for 50 rounds.', sprite: 'td89' },
-  { id: 'bloodmoon', name: 'Pact of the Blood Moon', cost: 4, rounds: 30, desc: 'Every win of ×10 or more pays half again, for 30 rounds.', sprite: 'td115' },
-  { id: 'fortune', name: 'Pact of Fortune', cost: 2, rounds: 3, desc: 'Your next three claimed contracts pay double.', sprite: 'td116' },
+  { id: 'hunger', name: 'Pact of Hunger', cost: 1, rounds: 40, desc: 'Double infamy for 40 rounds.', sprite: 'imp' },
+  { id: 'avarice', name: 'Pact of Avarice', cost: 3, rounds: 50, desc: '+2.5% rakeback on every wager for 50 rounds.', sprite: 'chest' },
+  { id: 'bloodmoon', name: 'Pact of the Blood Moon', cost: 4, rounds: 30, desc: 'Every win of ×10 or more pays half again, for 30 rounds.', sprite: 'vial_red' },
+  { id: 'fortune', name: 'Pact of Fortune', cost: 2, rounds: 3, desc: 'Your next three claimed contracts pay double.', sprite: 'rose' },
 ];
 
 /* ---------------- feats (the Grimoire) ---------------- */
@@ -143,13 +143,13 @@ export const FEATS: FeatDef[] = [
 export interface ArcStage { at: number; title: string; lines: string[]; gold: number; souls: number }
 export const HOST_ARCS: Record<FloorId, ArcStage[]> = {
   parlor: [
-    { at: 0, title: 'A New Face', gold: 6, souls: 0, lines: ['Welcome to my parlour, darling. Coins, dice, a few cursed machines — the little sins.', 'Play well and I shall remember your name. Play badly and I shall remember it longer.'] },
-    { at: 40, title: 'Regular', gold: 15, souls: 1, lines: ['Forty rounds and still breathing. I had a wager with Corvin that you would not last thirty.', 'Take this — my winnings. You earned half of them.'] },
-    { at: 150, title: 'Vesper’s Favourite', gold: 40, souls: 2, lines: ['Do you know what happened to my last favourite? He went downstairs.', 'Nobody comes back up the same. Here — for the journey.'] },
+    { at: 0, title: 'A New Face', gold: 6, souls: 0, lines: ['Welcome to my parlour, little moth. Coins, dice, a few cursed machines — the little sins.', 'Play well and I shall remember your name. Play badly and I shall remember it longer.'] },
+    { at: 40, title: 'Regular', gold: 15, souls: 1, lines: ['Forty rounds and still breathing. I had a wager with Sir Carrion that you would not last thirty.', 'Take this — my winnings. You earned half of them.'] },
+    { at: 150, title: 'The Moth’s Favourite', gold: 40, souls: 2, lines: ['Do you know what happened to my last favourite? He went downstairs.', 'Nobody comes back up the same. Here — for the journey.'] },
     { at: 400, title: 'Heir of the Parlor', gold: 120, souls: 4, lines: ['You have played my tables more than I have. I think the parlour belongs to you now.', 'Keep my chair warm. I am going to see what is under the Abyss.'] },
   ],
   salon: [
-    { at: 0, title: 'Guest of Honour', gold: 8, souls: 0, lines: ['Sir Corvin, at your service. Here the cards remember every hand.', 'Cheat, and they will tell me. Lose, and they will tell everyone.'] },
+    { at: 0, title: 'Guest of Honour', gold: 8, souls: 0, lines: ['Sir Carrion, at your service. Here the cards remember every hand.', 'Cheat, and they will tell me. Lose, and they will tell everyone.'] },
     { at: 40, title: 'Card-Sworn', gold: 18, souls: 1, lines: ['You play like a knight — straight into the lance. Admirable. Expensive.', 'A token from the house, so you may keep charging.'] },
     { at: 150, title: 'Knight of the Felt', gold: 45, souls: 2, lines: ['I once wagered my soul on a single hand of blackjack. I drew to sixteen.', 'I still wonder what the next card was. Do not become me.'] },
     { at: 400, title: 'Lord of the Salon', gold: 140, souls: 4, lines: ['I yield. The salon is yours, and my debts with it.', 'Read the ledger carefully. My name is on page one.'] },

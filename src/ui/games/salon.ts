@@ -105,7 +105,7 @@ export const blackjackGame: GameMount = ctx => {
     const d = btn('Double', '', () => void act('double')); if (!round.canDouble()) d.disabled = true;
     const sp = btn('Split', '', () => void act('split')); if (!round.canSplit()) sp.disabled = true;
     ctx.controls.append(btn('Hit', 'blood', () => void act('hit')), btn('Stand', 'blood', () => void act('stand')), d, sp);
-    if (eye) { const a = basicStrategy(round.hand.cards, round.dealer[0], round.canDouble(), round.canSplit()); hint.textContent = `Corvin whispers: ${a}.`; }
+    if (eye) { const a = basicStrategy(round.hand.cards, round.dealer[0], round.canDouble(), round.canSplit()); hint.textContent = `Carrion whispers: ${a}.`; }
   }
   render();
 };
@@ -130,35 +130,35 @@ export const rouletteGame: GameMount = ctx => {
     g.clearRect(0, 0, 520, 520);
     g.save(); g.translate(c, c);
     // rim
-    const rim = g.createRadialGradient(0, 0, 200, 0, 0, 258); rim.addColorStop(0, '#3a1a08'); rim.addColorStop(0.6, '#b98232'); rim.addColorStop(0.8, '#fff0c4'); rim.addColorStop(1, '#5a3410');
+    const rim = g.createRadialGradient(0, 0, 200, 0, 0, 258); rim.addColorStop(0, '#34172c'); rim.addColorStop(0.6, '#c99032'); rim.addColorStop(0.8, '#fff4d0'); rim.addColorStop(1, '#5c1a35');
     g.fillStyle = rim; g.beginPath(); g.arc(0, 0, 258, 0, Math.PI * 2); g.fill();
-    g.fillStyle = '#120508'; g.beginPath(); g.arc(0, 0, 232, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#0c0710'; g.beginPath(); g.arc(0, 0, 232, 0, Math.PI * 2); g.fill();
     g.rotate(wheelRot);
     T.WHEEL_ORDER.forEach((n, i) => {
       const a0 = i * seg - Math.PI / 2 - seg / 2;
       g.beginPath(); g.moveTo(0, 0); g.arc(0, 0, 224, a0, a0 + seg); g.closePath();
       const cursed = curses.has(n);
-      g.fillStyle = n === 0 ? '#1d6b42' : T.RED.has(n) ? '#a3132a' : '#151012'; g.fill();
-      if (cursed) { g.fillStyle = 'rgba(255,200,60,.45)'; g.fill(); }
-      g.strokeStyle = '#c99440'; g.lineWidth = 1.5; g.stroke();
-      g.save(); g.rotate(a0 + seg / 2 + Math.PI / 2); g.fillStyle = cursed ? '#fff3b0' : '#f1e3c4'; g.font = 'bold 22px Cinzel, serif'; g.textAlign = 'center'; g.fillText(String(n), 0, -196); g.restore();
+      g.fillStyle = n === 0 ? '#174f30' : T.RED.has(n) ? '#9a1f37' : '#1c0e1a'; g.fill();
+      if (cursed) { g.fillStyle = 'rgba(255,195,90,.45)'; g.fill(); }
+      g.strokeStyle = '#c99032'; g.lineWidth = 1.5; g.stroke();
+      g.save(); g.rotate(a0 + seg / 2 + Math.PI / 2); g.fillStyle = cursed ? '#fff4d0' : '#e6d5b0'; g.font = '24px "Jersey 15", monospace'; g.textAlign = 'center'; g.fillText(String(n), 0, -196); g.restore();
     });
     // inner cone
-    const cone = g.createRadialGradient(-20, -20, 10, 0, 0, 150); cone.addColorStop(0, '#5a2a12'); cone.addColorStop(1, '#1a0806');
+    const cone = g.createRadialGradient(-20, -20, 10, 0, 0, 150); cone.addColorStop(0, '#5c1a35'); cone.addColorStop(1, '#1c0e1a');
     g.fillStyle = cone; g.beginPath(); g.arc(0, 0, 150, 0, Math.PI * 2); g.fill();
-    g.strokeStyle = '#c99440'; g.lineWidth = 3; g.beginPath(); g.arc(0, 0, 150, 0, Math.PI * 2); g.stroke();
-    for (let i = 0; i < 4; i++) { g.save(); g.rotate((i * Math.PI) / 2); g.fillStyle = '#d9a64e'; g.fillRect(-6, -130, 12, 110); g.restore(); }
-    g.fillStyle = '#e7bd6a'; g.beginPath(); g.arc(0, 0, 26, 0, Math.PI * 2); g.fill();
+    g.strokeStyle = '#c99032'; g.lineWidth = 3; g.beginPath(); g.arc(0, 0, 150, 0, Math.PI * 2); g.stroke();
+    for (let i = 0; i < 4; i++) { g.save(); g.rotate((i * Math.PI) / 2); g.fillStyle = '#c99032'; g.fillRect(-6, -130, 12, 110); g.restore(); }
+    g.fillStyle = '#ffc35a'; g.beginPath(); g.arc(0, 0, 26, 0, Math.PI * 2); g.fill();
     g.restore();
     // ball
     g.save(); g.translate(c, c);
     const bx = Math.cos(ballA) * 232 * ballR, by = Math.sin(ballA) * 232 * ballR;
-    const bg = g.createRadialGradient(bx - 4, by - 4, 1, bx, by, 11); bg.addColorStop(0, '#fff'); bg.addColorStop(1, '#a9a9a9');
+    const bg = g.createRadialGradient(bx - 4, by - 4, 1, bx, by, 11); bg.addColorStop(0, '#fff4d0'); bg.addColorStop(1, '#9a8796');
     g.fillStyle = bg; g.beginPath(); g.arc(bx, by, 10, 0, Math.PI * 2); g.fill();
     g.restore();
     // curse labels
     if (curses.size) {
-      g.font = 'bold 26px VT323, monospace'; g.textAlign = 'center'; g.fillStyle = '#ffe08a';
+      g.font = '28px "Jersey 15", monospace'; g.textAlign = 'center'; g.fillStyle = '#f6d27a';
       g.fillText([...curses].map(([n, m]) => `${n}: ×${m}`).join('   '), c, 300);
     }
   }
@@ -198,7 +198,7 @@ export const rouletteGame: GameMount = ctx => {
     spinning = true; ctx.busy(true); ctx.say('');
     if (v === 'devil') {
       curses = T.drawCurses();
-      sfx.doom(); flash('rgba(255,200,60,.25)');
+      sfx.doom(); flash('rgba(255,195,90,.25)');
       drawWheel();
       ctx.say('Cursed: ' + [...curses].map(([n, m]) => `${n} ×${m}`).join(' · '), 'win');
       await sleep(1100);
@@ -282,7 +282,7 @@ export const pokerGame: GameMount = ctx => {
     for (let i = 0; i < 5; i++) { drawHand([...Array(5)].map((_, k) => k === i)); sfx.play('card', 0.6); await sleep(90); }
     drawHand();
     const pre = evaluate(hand); if (pre >= 0) { hl(pre); }
-    if (eye) { held = v === 'job' ? T.vpAdvice(hand) : T.dwAdvice(hand); tip.textContent = 'Corvin has marked the cards he would keep.'; drawHand(); }
+    if (eye) { held = v === 'job' ? T.vpAdvice(hand) : T.dwAdvice(hand); tip.textContent = 'Sir Carrion has marked the cards he would keep.'; drawHand(); }
     render();
   }
   async function draw(): Promise<void> {

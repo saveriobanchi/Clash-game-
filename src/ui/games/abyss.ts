@@ -1,5 +1,6 @@
-import { h, A, clear, sleep } from '../dom';
+import { h, clear, sleep } from '../dom';
 import { px, pxCanvas } from '../px';
+import { sprite } from '../../art';
 import { sfx } from '../audio';
 import { burst, shake, flash, centerOf, coinShower, floatText } from '../fx';
 import { GameMount } from '../shell';
@@ -29,27 +30,27 @@ export const crashGame: GameMount = ctx => {
   let phase: 'idle' | 'run' | 'burst' = 'idle';
   let point = 1, t = 0, m = 1, stake = 0, cashed = 0, raf = 0;
   const bats = Array.from({ length: 7 }, () => ({ x: Math.random() * W, y: 40 + Math.random() * 120, s: 0.6 + Math.random() * 0.8, ph: Math.random() * 6 }));
-  const bat = pxCanvas('td120');
+  const bat = pxCanvas('bat');
   const stars = Array.from({ length: 50 }, () => [Math.random() * W, Math.random() * H, Math.random()]);
   const history: number[] = [];
   function draw(): void {
     g.clearRect(0, 0, W, H);
-    const sky = g.createLinearGradient(0, 0, 0, H); sky.addColorStop(0, '#12020a'); sky.addColorStop(1, '#3a0610');
+    const sky = g.createLinearGradient(0, 0, 0, H); sky.addColorStop(0, '#0c0710'); sky.addColorStop(1, '#34172c');
     g.fillStyle = sky; g.fillRect(0, 0, W, H);
-    for (const [x, y, b] of stars) { g.fillStyle = `rgba(255,220,200,${0.2 + b * 0.5 * (0.5 + 0.5 * Math.sin(t * 3 + b * 9))})`; g.fillRect(x, y, 1.5, 1.5); }
+    for (const [x, y, b] of stars) { g.fillStyle = `rgba(230,213,176,${0.2 + b * 0.5 * (0.5 + 0.5 * Math.sin(t * 3 + b * 9))})`; g.fillRect(x, y, 1.5, 1.5); }
     // moon rises with the multiplier
     const prog = Math.min(1, Math.log(m) / Math.log(20));
     const mx = 60 + prog * (W - 140), my = H - 50 - prog * (H - 110);
     const r = 26 + prog * 22 + (phase === 'burst' ? 0 : Math.sin(t * 4) * 1.5);
     if (phase !== 'burst') {
-      const halo = g.createRadialGradient(mx, my, r * 0.5, mx, my, r * 3.2); halo.addColorStop(0, 'rgba(255,60,60,.55)'); halo.addColorStop(1, 'rgba(255,0,0,0)');
+      const halo = g.createRadialGradient(mx, my, r * 0.5, mx, my, r * 3.2); halo.addColorStop(0, 'rgba(214,58,74,.55)'); halo.addColorStop(1, 'rgba(214,58,74,0)');
       g.fillStyle = halo; g.beginPath(); g.arc(mx, my, r * 3.2, 0, Math.PI * 2); g.fill();
-      const moon = g.createRadialGradient(mx - r * 0.35, my - r * 0.35, r * 0.1, mx, my, r); moon.addColorStop(0, '#ffb39a'); moon.addColorStop(0.5, '#d4202f'); moon.addColorStop(1, '#5a0410');
+      const moon = g.createRadialGradient(mx - r * 0.35, my - r * 0.35, r * 0.1, mx, my, r); moon.addColorStop(0, '#ffc35a'); moon.addColorStop(0.5, '#d63a4a'); moon.addColorStop(1, '#5c1a35');
       g.fillStyle = moon; g.beginPath(); g.arc(mx, my, r, 0, Math.PI * 2); g.fill();
-      g.fillStyle = 'rgba(80,0,10,.35)'; g.beginPath(); g.arc(mx + r * 0.3, my - r * 0.1, r * 0.22, 0, Math.PI * 2); g.arc(mx - r * 0.25, my + r * 0.35, r * 0.15, 0, Math.PI * 2); g.fill();
+      g.fillStyle = 'rgba(92,26,53,.35)'; g.beginPath(); g.arc(mx + r * 0.3, my - r * 0.1, r * 0.22, 0, Math.PI * 2); g.arc(mx - r * 0.25, my + r * 0.35, r * 0.15, 0, Math.PI * 2); g.fill();
     }
     // trail curve
-    g.strokeStyle = phase === 'burst' ? '#5a0a14' : '#ff4a5e'; g.lineWidth = 3; g.shadowColor = '#ff2a3a'; g.shadowBlur = phase === 'burst' ? 0 : 10;
+    g.strokeStyle = phase === 'burst' ? '#5c1a35' : '#d63a4a'; g.lineWidth = 3; g.shadowColor = '#d63a4a'; g.shadowBlur = phase === 'burst' ? 0 : 10;
     g.beginPath();
     for (let i = 0; i <= 40; i++) {
       const pm = 1 + ((m - 1) * i) / 40, pp = Math.min(1, Math.log(pm) / Math.log(20));
@@ -64,8 +65,8 @@ export const crashGame: GameMount = ctx => {
       g.drawImage(bat, b.x, b.y + Math.sin(t * 2 + b.ph) * 6, 18 * b.s, 18 * b.s * flap);
     }
     // ground: graves
-    g.fillStyle = '#080204'; g.fillRect(0, H - 22, W, 22);
-    const grave = pxCanvas('mr120');
+    g.fillStyle = '#0c0710'; g.fillRect(0, H - 22, W, 22);
+    const grave = pxCanvas('tombstone');
     for (let x = 6; x < W; x += 44) g.drawImage(grave, x, H - 34, 16, 16);
   }
   let lastBeat = 0;
@@ -107,9 +108,9 @@ export const crashGame: GameMount = ctx => {
   function boom(): void {
     phase = 'burst';
     const r = cv.getBoundingClientRect();
-    burst(r.left + r.width * 0.6, r.top + r.height * 0.35, { n: 50, colors: ['#ff2a3a', '#8a0010', '#ff8a6a'], tex: ['smoke_04', 'magic_02', 'spark_06'], speed: 320, size: 46 });
+    burst(r.left + r.width * 0.6, r.top + r.height * 0.35, { n: 50, colors: ['#d63a4a', '#9a1f37', '#f2783a'], tex: ['smoke_04', 'magic_02', 'spark_06'], speed: 320, size: 46 });
     sfx.doom(); shake(cv, 1.2);
-    if (!cashed) { ctx.settle(stake, 0, null, true); flash('rgba(200,0,20,.4)'); ctx.say(`The moon burst at ${mfmt(point)}.`, 'lose'); }
+    if (!cashed) { ctx.settle(stake, 0, null, true); flash('rgba(154,31,55,.4)'); ctx.say(`The moon burst at ${mfmt(point)}.`, 'lose'); }
     multEl.textContent = mfmt(point); multEl.classList.add('dead');
     history.unshift(point); if (history.length > 10) history.pop();
     clear(hist); history.forEach(x => hist.append(h('span', { class: x >= 2 ? 'hi' : 'lo' }, mfmt(x))));
@@ -141,7 +142,7 @@ export const towerGame: GameMount = ctx => {
       const row = h('div', 'tower-row' + (active && l === level ? ' current' : '') + (l < level ? ' passed' : ''));
       row.append(h('span', 'tower-mult', mfmt(G.towerMult(mode, l + 1))));
       for (let d = 0; d < md.doors; d++) {
-        const door = h('button', { class: 'tower-door', onclick: () => void pick(l, d, door) }, px(l < level ? 'td47' : 'td46', 34));
+        const door = h('button', { class: 'tower-door', onclick: () => void pick(l, d, door) }, px(l < level ? 'door_open' : 'door', 34));
         if (active && l === level && spade && hintDoor === d) door.classList.add('hint');
         row.append(door);
       }
@@ -167,16 +168,16 @@ export const towerGame: GameMount = ctx => {
     sfx.play('slide', 0.5, 0.6); door.classList.add('opening');
     await sleep(380);
     if (fiends[l].includes(d)) {
-      clear(door); door.append(px('td110', 34)); door.classList.add('bad');
-      sfx.doom(); shake(tower, 1.4); flash('rgba(200,0,20,.35)');
+      clear(door); door.append(px('imp', 34)); door.classList.add('bad');
+      sfx.doom(); shake(tower, 1.4); flash('rgba(154,31,55,.35)');
       // reveal the row
       const row = door.parentElement!;
-      fiends[l].forEach(fd => { const el = row.children[fd + 1] as HTMLElement; if (el !== door) { clear(el); el.append(px('td110', 30)); el.classList.add('bad', 'ghosted'); } });
+      fiends[l].forEach(fd => { const el = row.children[fd + 1] as HTMLElement; if (el !== door) { clear(el); el.append(px('imp', 30)); el.classList.add('bad', 'ghosted'); } });
       ctx.settle(stake, 0, tower); ctx.say('A fiend waits behind the door.', 'lose');
       active = false; ctx.busy(false); busyPick = false; render();
       return;
     }
-    clear(door); door.append(px('default_gold_lump', 30)); door.classList.add('safe');
+    clear(door); door.append(px('coin', 30)); door.classList.add('safe');
     sfx.tone(440 * Math.pow(1.12, level), 0.25, 'triangle', 0.14, 0, true);
     burst(...centerOf(door), { n: 10, size: 24 });
     level++;
@@ -210,25 +211,25 @@ export const ruinGame: GameMount = ctx => {
   const leg = h('div', 'ruin-legend');
   ctx.stage.append(cv, leg);
   let rot = 0, spinning = false;
-  const col = (m: number) => m === 0 ? '#1b0a10' : m < 1.5 ? '#5a2a3a' : m < 2 ? '#8a4a1a' : m < 3 ? '#c9822a' : m < 5 ? '#e0b062' : m < 10 ? '#ff7a2a' : '#ff2a3a';
+  const col = (m: number) => m === 0 ? '#1c0e1a' : m < 1.5 ? '#5c1a35' : m < 2 ? '#7d4e1f' : m < 3 ? '#c99032' : m < 5 ? '#ffc35a' : m < 10 ? '#f2783a' : '#d63a4a';
   function draw(): void {
     const segs = G.WHEEL_SEGMENTS[risk], n = segs.length, c = 260;
     g.clearRect(0, 0, 520, 520);
     g.save(); g.translate(c, c);
-    const rim = g.createRadialGradient(0, 0, 220, 0, 0, 256); rim.addColorStop(0, '#2a0a10'); rim.addColorStop(0.7, '#b98232'); rim.addColorStop(1, '#3a1a08');
+    const rim = g.createRadialGradient(0, 0, 220, 0, 0, 256); rim.addColorStop(0, '#1c0e1a'); rim.addColorStop(0.7, '#c99032'); rim.addColorStop(1, '#34172c');
     g.fillStyle = rim; g.beginPath(); g.arc(0, 0, 256, 0, Math.PI * 2); g.fill();
     g.rotate(rot);
     segs.forEach((m, i) => {
       const a0 = (i / n) * Math.PI * 2 - Math.PI / 2, a1 = ((i + 1) / n) * Math.PI * 2 - Math.PI / 2;
       g.beginPath(); g.moveTo(0, 0); g.arc(0, 0, 232, a0, a1); g.closePath(); g.fillStyle = col(m); g.fill();
-      g.strokeStyle = 'rgba(231,189,106,.6)'; g.lineWidth = 1.5; g.stroke();
-      if (m > 0) { g.save(); g.rotate((a0 + a1) / 2); g.fillStyle = '#fff1d0'; g.font = 'bold 24px VT323, monospace'; g.textAlign = 'right'; g.fillText('×' + m, 222, 8); g.restore(); }
+      g.strokeStyle = 'rgba(255,195,90,.6)'; g.lineWidth = 1.5; g.stroke();
+      if (m > 0) { g.save(); g.rotate((a0 + a1) / 2); g.fillStyle = '#fff4d0'; g.font = '26px "Jersey 15", monospace'; g.textAlign = 'right'; g.fillText('×' + m, 222, 8); g.restore(); }
     });
     g.restore();
-    g.fillStyle = '#120508'; g.beginPath(); g.arc(c, c, 80, 0, Math.PI * 2); g.fill();
-    g.strokeStyle = '#e7bd6a'; g.lineWidth = 4; g.stroke();
-    g.imageSmoothingEnabled = false; g.drawImage(pxCanvas('lottachievements_crowned_skull'), c - 40, c - 42, 80, 84);
-    g.fillStyle = '#ffe08a'; g.beginPath(); g.moveTo(c, 34); g.lineTo(c - 16, 2); g.lineTo(c + 16, 2); g.closePath(); g.fill();
+    g.fillStyle = '#0c0710'; g.beginPath(); g.arc(c, c, 80, 0, Math.PI * 2); g.fill();
+    g.strokeStyle = '#ffc35a'; g.lineWidth = 4; g.stroke();
+    g.imageSmoothingEnabled = false; g.drawImage(pxCanvas('crown_skull'), c - 40, c - 42, 80, 84);
+    g.fillStyle = '#f6d27a'; g.beginPath(); g.moveTo(c, 34); g.lineTo(c - 16, 2); g.lineTo(c + 16, 2); g.closePath(); g.fill();
   }
   function legend(): void {
     clear(leg);
@@ -274,12 +275,12 @@ export const chaliceGame: GameMount = ctx => {
   type V = 'one' | 'twin' | 'rites';
   const CFG: Record<V, [number, number, number]> = { one: [6, 1, 3], twin: [6, 2, 3], rites: [12, 3, 4] };
   let v: V = ctx.variants<V>([{ id: 'one', label: 'One poison' }, { id: 'twin', label: 'Twin venom' }, { id: 'rites', label: 'Last rites 12' }], 'one', x => { v = x; eng.refresh(); });
-  const host = h('div', 'chalice-host', h('img', { src: A('portraits/proprietor.webp'), alt: '' }), h('div', 'speech small', '“Drink, my guest. Only one of them is unkind.”'));
+  const host = h('div', 'chalice-host', sprite('mask_proprietor', 64), h('div', 'speech small', '“Drink, my guest. Only one of them is unkind.”'));
   ctx.stage.append(host);
-  const vials = ['td113', 'td114', 'td115', 'td116'];
+  const vials = ['vial_teal', 'vial_green', 'vial_red', 'vial_blue'];
   const eng = pickEngine(ctx, {
     tiles: () => CFG[v][0], bad: () => CFG[v][1], cols: () => CFG[v][2],
-    safeSprite: () => 'default_apple_gold', badSprite: 'lottacievements_skull', closedClass: 'chalice', closedSprite: undefined,
+    safeSprite: () => 'coin', badSprite: 'skull', closedClass: 'chalice', closedSprite: undefined,
     suspense: 850, label: 'poisoned',
     onBad: () => { (host.querySelector('.speech') as HTMLElement).textContent = '“Oh dear. That one was mine.”'; },
     onClear: () => feat('chalice_all'),
@@ -294,8 +295,8 @@ export const chaliceGame: GameMount = ctx => {
 export const bargainGame: GameMount = ctx => {
   ctx.variants([{ id: 'std', label: 'High card against the house' }], 'std', () => undefined);
   ctx.lockBet(true);
-  const devilRow = h('div', 'bargain-side', h('img', { class: 'bargain-portrait', src: A('portraits/proprietor.webp'), alt: '' }), h('div', 'bargain-card'));
-  const youRow = h('div', 'bargain-side', h('img', { class: 'bargain-portrait you', src: A('portraits/wagerer.webp'), alt: '' }), h('div', 'bargain-card'));
+  const devilRow = h('div', 'bargain-side', sprite('mask_proprietor', 96, 'bargain-portrait'), h('div', 'bargain-card'));
+  const youRow = h('div', 'bargain-side', sprite('mask_player', 72, 'bargain-portrait you'), h('div', 'bargain-card'));
   const stakeEl = h('div', 'mult-tag', '');
   const tiers = h('div', 'bargain-tiers');
   ctx.stage.append(devilRow, h('div', 'label-gold', 'higher card wins ×2.08 · ties belong to the house'), youRow, stakeEl, tiers);
@@ -344,7 +345,7 @@ export const bargainGame: GameMount = ctx => {
       coinShower(tier >= 2 ? 60 : 20);
       ctx.say('“Well played. This time.”', 'win');
     } else {
-      shake(youRow, 1.6); flash('rgba(120,0,10,.5)');
+      shake(youRow, 1.6); flash('rgba(92,26,53,.5)');
       ctx.say(dc.r === yc.r ? '“A tie is mine, as agreed.”' : '“Mine. As it always was.”', 'lose');
     }
     playing = false; ctx.busy(false); ctx.lockBet(true); drawTiers(); render();

@@ -12,19 +12,19 @@ export const LINES: number[][] = [
   [1, 1, 1, 1, 1], [0, 0, 0, 0, 0], [2, 2, 2, 2, 2], [0, 1, 2, 1, 0], [2, 1, 0, 1, 2],
   [0, 0, 1, 2, 2], [2, 2, 1, 0, 0], [1, 0, 0, 0, 1], [1, 2, 2, 2, 1], [1, 0, 1, 2, 1],
 ];
-const WILD = (w: number, pay: [number, number, number]): SlotSymbol => ({ id: 'wild', sprite: 'lottachievements_crowned_skull', w, pay, wild: true });
-const SCAT = (w: number): SlotSymbol => ({ id: 'scatter', sprite: 'lottacievements_skull', w, pay: [0, 0, 0], scatter: true });
+const WILD = (w: number, pay: [number, number, number]): SlotSymbol => ({ id: 'wild', sprite: 'crown_skull', w, pay, wild: true });
+const SCAT = (w: number): SlotSymbol => ({ id: 'scatter', sprite: 'eye', w, pay: [0, 0, 0], scatter: true });
 
 export const MACHINES: Machine[] = [
   {
-    id: 'gilded', name: 'Gilded Reliquary', vol: 'Low', blurb: 'Steady little sins. Crowned skulls are wild; three bare skulls open 10 free spins at ×2.',
+    id: 'gilded', name: 'Gilded Reliquary', vol: 'Low', blurb: 'Steady little sins. Crowned skulls are wild; three open eyes start 10 free spins at ×2.',
     symbols: [
-      { id: 'cherry', sprite: 'cherry', w: 30, pay: [4, 10, 25] },
-      { id: 'berry', sprite: 'ethereal_strawberry', w: 26, pay: [5, 12, 30] },
-      { id: 'apple', sprite: 'default_apple_gold', w: 20, pay: [8, 20, 60] },
+      { id: 'cherry', sprite: 'rose', w: 30, pay: [4, 10, 25] },
+      { id: 'berry', sprite: 'candle', w: 26, pay: [5, 12, 30] },
+      { id: 'apple', sprite: 'bell', w: 20, pay: [8, 20, 60] },
       { id: 'ruby', sprite: 'ruby', w: 14, pay: [12, 40, 120] },
       { id: 'emerald', sprite: 'emerald', w: 10, pay: [20, 70, 250] },
-      { id: 'diamond', sprite: 'default_diamond', w: 6, pay: [35, 150, 600] },
+      { id: 'diamond', sprite: 'diamond', w: 6, pay: [35, 150, 600] },
       WILD(4, [50, 250, 1500]), SCAT(4),
     ],
     freeSpins: { 3: 10, 4: 15, 5: 25 }, freeMult: 2, scale: 1.137,
@@ -32,25 +32,25 @@ export const MACHINES: Machine[] = [
   {
     id: 'blood', name: 'Blood Moon Engine', vol: 'Brutal', blurb: 'Long silences, then screaming. Free spins pay ×3 and wilds are scarce.',
     symbols: [
-      { id: 'shroom', sprite: 'ethereal_illumishroom_red', w: 34, pay: [2, 8, 20] },
-      { id: 'vial', sprite: 'glass_bottle', w: 26, pay: [4, 12, 40] },
-      { id: 'heart', sprite: 'heart', w: 16, pay: [10, 40, 150] },
-      { id: 'blade', sprite: 'nether_tool_nethersword', w: 10, pay: [25, 100, 500] },
-      { id: 'mese', sprite: 'default_mese_crystal', w: 6, pay: [60, 300, 1500] },
-      { id: 'ingot', sprite: 'nether_murexium_ingot', w: 3, pay: [150, 1000, 6000] },
+      { id: 'shroom', sprite: 'vial_red', w: 34, pay: [2, 8, 20] },
+      { id: 'vial', sprite: 'heart', w: 26, pay: [4, 12, 40] },
+      { id: 'heart', sprite: 'dagger', w: 16, pay: [10, 40, 150] },
+      { id: 'blade', sprite: 'blood_moon', w: 10, pay: [25, 100, 500] },
+      { id: 'mese', sprite: 'amethyst', w: 6, pay: [60, 300, 1500] },
+      { id: 'ingot', sprite: 'chalice', w: 3, pay: [150, 1000, 6000] },
       WILD(2.5, [200, 1500, 10000]), SCAT(3.2),
     ],
     freeSpins: { 3: 8, 4: 12, 5: 20 }, freeMult: 3, scale: 0.964,
   },
   {
-    id: 'crypt', name: 'Crypt of Crowns', vol: 'Medium', blurb: 'A crowned skull on reels 2–4 swells to fill its whole reel.',
+    id: 'crypt', name: 'Crypt of Crowns', vol: 'Medium', blurb: 'A crowned skull on reels 2–4 swells to fill its whole reel. Three eyes start free spins.',
     symbols: [
-      { id: 'torch', sprite: 'default_torch_3', w: 30, pay: [3, 10, 25] },
-      { id: 'chalice', sprite: 'mug', w: 24, pay: [5, 14, 40] },
-      { id: 'key', sprite: 'gold_ingot', w: 18, pay: [8, 25, 80] },
-      { id: 'sword', sprite: 'default_tool_goldsword', w: 12, pay: [15, 50, 200] },
-      { id: 'tome', sprite: 'default_obsidian_shard', w: 8, pay: [25, 100, 400] },
-      { id: 'crown', sprite: 'moreores_mithril_ingot', w: 5, pay: [50, 200, 1000] },
+      { id: 'torch', sprite: 'candle', w: 30, pay: [3, 10, 25] },
+      { id: 'chalice', sprite: 'key', w: 24, pay: [5, 14, 40] },
+      { id: 'key', sprite: 'tome', w: 18, pay: [8, 25, 80] },
+      { id: 'sword', sprite: 'dagger', w: 12, pay: [15, 50, 200] },
+      { id: 'tome', sprite: 'sapphire', w: 8, pay: [25, 100, 400] },
+      { id: 'crown', sprite: 'ring', w: 5, pay: [50, 200, 1000] },
       WILD(2.6, [80, 400, 2500]), SCAT(3.4),
     ],
     freeSpins: { 3: 8, 4: 12, 5: 16 }, freeMult: 2, expandingWild: true, scale: 0.832,

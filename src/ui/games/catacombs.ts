@@ -59,7 +59,7 @@ export function pickEngine(ctx: GameCtx, o: {
     t.classList.remove('pending', 'hint');
     if (hazards.has(i)) {
       t.className = 'tile bad pop'; clear(t); t.append(px(o.badSprite, 44));
-      sfx.doom(); shake(grid, 1.5); flash('rgba(160,0,20,.35)');
+      sfx.doom(); shake(grid, 1.5); flash('rgba(154,31,55,.35)');
       o.onBad?.();
       revealAll(i);
       ctx.settle(stake, 0, grid);
@@ -69,7 +69,7 @@ export function pickEngine(ctx: GameCtx, o: {
       opened.add(i);
       t.className = 'tile open pop'; clear(t); t.append(px(o.safeSprite(i), 44));
       sfx.tone(520 * Math.pow(1.07, opened.size), 0.18, 'triangle', 0.14, 0, true); sfx.play('chip', 0.4, 1.3);
-      burst(...centerOf(t), { n: 8, size: 24, colors: ['#9ff7e0', '#ffe08a'] });
+      burst(...centerOf(t), { n: 8, size: 24, colors: ['#a6f5e2', '#f6d27a'] });
       info.textContent = `${mfmt(mult())} · ${fmt(stake * mult())}`;
       if (opened.size >= o.tiles() - o.bad()) { o.onClear?.(); cash(); }
     }
@@ -114,7 +114,7 @@ export const minesGame: GameMount = ctx => {
   const SIZES: Record<V, [number, number]> = { ossuary: [9, 3], crypt: [25, 5], labyrinth: [36, 6] };
   let v: V = ctx.variants<V>([{ id: 'ossuary', label: 'Ossuary 3×3' }, { id: 'crypt', label: 'Crypt 5×5' }, { id: 'labyrinth', label: 'Labyrinth 6×6' }], 'crypt', x => { v = x; bad = Math.min(bad, SIZES[v][0] - 1); eng.refresh(); upd(); });
   let bad = 3;
-  const gems = ['default_diamond', 'ruby', 'emerald', 'default_mese_crystal', 'default_gold_ingot', 'crystal'];
+  const gems = ['diamond', 'ruby', 'emerald', 'amethyst', 'coin', 'i_soul'];
   const badCtl = h('div', 'betbar', { style: { justifyContent: 'center' } });
   const badVal = h('div', 'betbox', { style: { flex: '0 0 150px', fontSize: '22px' } });
   const upd = () => { badVal.textContent = `${bad} curse${bad > 1 ? 's' : ''}`; };
@@ -122,7 +122,7 @@ export const minesGame: GameMount = ctx => {
   upd();
   const eng = pickEngine(ctx, {
     tiles: () => SIZES[v][0], bad: () => bad, cols: () => SIZES[v][1],
-    safeSprite: i => gems[i % gems.length], badSprite: 'td20', closedClass: 'tomb', label: 'cursed',
+    safeSprite: i => gems[i % gems.length], badSprite: 'skull', closedClass: 'tomb', label: 'cursed',
   });
   ctx.stage.prepend(badCtl);
 };
@@ -138,21 +138,21 @@ export const plinkoGame: GameMount = ctx => {
   ctx.stage.append(cv);
   const balls: { path: number[]; t: number; slot: number; stake: number; done: boolean }[] = [];
   let flashSlot = -1, flashT = 0;
-  const skull = pxCanvas('lottacievements_skull');
+  const skull = pxCanvas('skull');
   const geom = () => {
     const top = 26, bottom = H - 46, gapY = (bottom - top) / rows, gapX = Math.min(26, (W - 30) / (rows + 2));
     return { top, bottom, gapY, gapX };
   };
-  const slotColor = (m: number) => m >= 10 ? '#ff2a3a' : m >= 3 ? '#ff7a2a' : m >= 1.2 ? '#e0b062' : m >= 1 ? '#7fd6c2' : '#4a3a44';
+  const slotColor = (m: number) => m >= 10 ? '#d63a4a' : m >= 3 ? '#f2783a' : m >= 1.2 ? '#ffc35a' : m >= 1 ? '#a6f5e2' : '#5e4e5e';
   function drawBoard(): void {
     const { top, gapY, gapX } = geom();
     g.clearRect(0, 0, W, H);
     for (let r = 0; r < rows; r++) {
       for (let k = 0; k <= r + 2; k++) {
         const x = W / 2 + (k - (r + 2) / 2) * gapX, y = top + r * gapY;
-        g.fillStyle = '#efe2c8'; g.beginPath(); g.arc(x, y, 3.2, 0, Math.PI * 2); g.fill();
-        g.fillStyle = 'rgba(0,0,0,.4)'; g.beginPath(); g.arc(x + 1, y + 1.5, 3.2, 0, Math.PI * 2); g.fill();
-        g.fillStyle = '#efe2c8'; g.beginPath(); g.arc(x, y, 3, 0, Math.PI * 2); g.fill();
+        g.fillStyle = '#e6d5b0'; g.beginPath(); g.arc(x, y, 3.2, 0, Math.PI * 2); g.fill();
+        g.fillStyle = 'rgba(12,7,16,.4)'; g.beginPath(); g.arc(x + 1, y + 1.5, 3.2, 0, Math.PI * 2); g.fill();
+        g.fillStyle = '#e6d5b0'; g.beginPath(); g.arc(x, y, 3, 0, Math.PI * 2); g.fill();
       }
     }
     const table = G.plinkoTable(rows, risk);
@@ -161,8 +161,8 @@ export const plinkoGame: GameMount = ctx => {
       const x = W / 2 + (i - rows / 2) * gapX;
       const bump = i === flashSlot ? Math.max(0, 1 - flashT) * 6 : 0;
       g.fillStyle = slotColor(m); g.fillRect(x - gapX / 2 + 1.5, sy + bump, gapX - 3, 26);
-      g.fillStyle = 'rgba(0,0,0,.35)'; g.fillRect(x - gapX / 2 + 1.5, sy + 20 + bump, gapX - 3, 6);
-      g.fillStyle = m >= 1 ? '#1a0508' : '#d8c8b0'; g.font = `bold ${gapX < 22 ? 9 : 11}px VT323, monospace`; g.textAlign = 'center';
+      g.fillStyle = 'rgba(12,7,16,.35)'; g.fillRect(x - gapX / 2 + 1.5, sy + 20 + bump, gapX - 3, 6);
+      g.fillStyle = m >= 1 ? '#0c0710' : '#e6d5b0'; g.font = `${gapX < 22 ? 9 : 11}px \"Jersey 15\", monospace`; g.textAlign = 'center';
       g.fillText(m >= 100 ? String(Math.round(m)) : m >= 10 ? m.toFixed(0) : m.toFixed(1), x, sy + 16 + bump);
     });
     g.imageSmoothingEnabled = false;
@@ -230,7 +230,7 @@ export const plinkoGame: GameMount = ctx => {
 /* ============================ GRAVE TICKETS ============================ */
 export const scratchGame: GameMount = ctx => {
   let tier = G.SCRATCH_TIERS.find(t => t.id === ctx.variants(G.SCRATCH_TIERS.map(t => ({ id: t.id, label: `${t.name} ×${t.price}` })), 'copper', id => { tier = G.SCRATCH_TIERS.find(t => t.id === id)!; idle(); }))!;
-  const SYMS = ['default_coal_lump', 'default_copper_ingot', 'moreores_silver_ingot', 'default_gold_ingot', 'default_diamond', 'lottachievements_crowned_skull'];
+  const SYMS = ['tombstone', 'key', 'chalice', 'coin', 'diamond', 'crown_skull'];
   const wrap = h('div', 'ticket');
   const prizes = h('div', 'ticket-prizes');
   ctx.stage.append(wrap, prizes);
@@ -243,7 +243,7 @@ export const scratchGame: GameMount = ctx => {
   }
   function idle(): void {
     clear(wrap); ticket = null; revealed = true; drawPrizes();
-    wrap.append(h('div', 'ticket-face idle', px('td65', 64), h('div', 'h2 gild', tier.name), h('div', 'muted small', `Costs ${tier.price}× your stake`)));
+    wrap.append(h('div', 'ticket-face idle', px('tombstone', 64), h('div', 'h2 gild', tier.name), h('div', 'muted small', `Costs ${tier.price}× your stake`)));
     render();
   }
   function buy(): void {
@@ -254,19 +254,20 @@ export const scratchGame: GameMount = ctx => {
     clear(wrap);
     const under = h('canvas'); under.width = CW; under.height = CH; under.className = 'ticket-under';
     const u = under.getContext('2d')!; u.imageSmoothingEnabled = false;
-    u.fillStyle = '#e8dcc0'; u.fillRect(0, 0, CW, CH);
+    u.fillStyle = '#e6d5b0'; u.fillRect(0, 0, CW, CH);
     ticket.grid.forEach((s, i) => {
       const x = (i % 3) * 100, y = Math.floor(i / 3) * 100;
-      u.fillStyle = (i + Math.floor(i / 3)) % 2 ? '#d9cba8' : '#efe3c8'; u.fillRect(x + 4, y + 4, 92, 92);
+      u.fillStyle = (i + Math.floor(i / 3)) % 2 ? '#e6d5b0' : '#e6d5b0'; u.fillRect(x + 4, y + 4, 92, 92);
       u.drawImage(pxCanvas(SYMS[s]), x + 22, y + 18, 56, 56);
-      u.fillStyle = '#5a3410'; u.font = 'bold 18px VT323, monospace'; u.textAlign = 'center'; u.fillText(mfmt(tier.prizes[s][0]), x + 50, y + 90);
+      u.fillStyle = '#5c1a35'; u.font = '20px "Jersey 15", monospace'; u.textAlign = 'center'; u.fillText(mfmt(tier.prizes[s][0]), x + 50, y + 90);
     });
     cover = h('canvas'); cover.width = CW; cover.height = CH; cover.className = 'ticket-cover';
     const c = cover.getContext('2d')!; c.imageSmoothingEnabled = false;
-    const dirt = pxCanvas('default_coal_block');
-    for (let y = 0; y < CH; y += 32) for (let x = 0; x < CW; x += 32) c.drawImage(dirt, x, y, 32, 32);
-    c.fillStyle = 'rgba(40,20,10,.35)'; c.fillRect(0, 0, CW, CH);
-    c.fillStyle = '#e7bd6a'; c.font = 'bold 22px Cinzel, serif'; c.textAlign = 'center'; c.fillText('SCRATCH THE GRAVE', CW / 2, CH / 2 + 8);
+    // grave dirt: a dithered pixel fill in the palette (4 px "pixels" on a 300 px ticket)
+    const dirtCols = ['#2e2530', '#34172c', '#5e4e5e', '#1c0e1a'];
+    for (let y = 0; y < CH; y += 4) for (let x = 0; x < CW; x += 4) { c.fillStyle = dirtCols[(x * 7 + y * 13 + ((x * y) >> 3)) % 4]; c.fillRect(x, y, 4, 4); }
+    c.fillStyle = 'rgba(28,14,26,.35)'; c.fillRect(0, 0, CW, CH);
+    c.fillStyle = '#ffc35a'; c.font = '24px "Jersey 15", monospace'; c.textAlign = 'center'; c.fillText('SCRATCH THE GRAVE', CW / 2, CH / 2 + 8);
     let scratched = 0, lastSnd = 0;
     const scratchAt = (ev: PointerEvent) => {
       if (revealed || !cover) return;
@@ -346,7 +347,7 @@ export const kenoGame: GameMount = ctx => {
       const hit = picks.has(n);
       if (hit) hits++;
       c.classList.add(hit ? 'hit' : 'drawn', 'pop');
-      if (hit) { sfx.tone(660 + hits * 90, 0.3, 'sine', 0.14, 0, true); rise(...centerOf(c), '#7fe6ff', 6); } else sfx.tone(200, 0.08, 'triangle', 0.06);
+      if (hit) { sfx.tone(660 + hits * 90, 0.3, 'sine', 0.14, 0, true); rise(...centerOf(c), '#a6f5e2', 6); } else sfx.tone(200, 0.08, 'triangle', 0.06);
       await sleep(260);
     }
     const m = G.kenoTable(picks.size)[hits];

@@ -230,9 +230,8 @@ export function scratchTicket(t: ScratchTier): { prizeIdx: number; grid: number[
 /* ---------------- Spectral Derby ---------------- */
 export interface Racer { name: string; sprite: string; p: number; odds: number }
 export const RACER_POOL = [
-  { name: 'Wailing Wisp', sprite: 'td121' }, { name: 'Gravecrawler', sprite: 'td122' }, { name: 'Cinder Imp', sprite: 'td110' },
-  { name: 'Moth of Ash', sprite: 'td120' }, { name: 'Bogling', sprite: 'td108' }, { name: 'Cyclops Brute', sprite: 'td109' },
-  { name: 'Hex Witch', sprite: 'td84' }, { name: 'Mire Snail', sprite: 'td123' }, { name: 'Plague Rat', sprite: 'td124' },
+  { name: 'Wailing Wisp', sprite: 'ghost' }, { name: 'Gravecrawler', sprite: 'spider' }, { name: 'Cinder Imp', sprite: 'imp' },
+  { name: 'Belfry Bat', sprite: 'bat' }, { name: 'Bog Slime', sprite: 'slime' }, { name: 'Lantern Moth', sprite: 'moth' },
 ];
 export const DERBY_RTP = 0.95;
 export function newRace(): Racer[] {

@@ -14,12 +14,8 @@
     "check": "tsc --noEmit && vitest run"
   },
   "dependencies": {
-    "@fontsource/cinzel": "5.3.0",
-    "@fontsource/cinzel-decorative": "5.2.6",
     "@fontsource/jacquard-24": "5.3.0",
-    "@fontsource/pixelify-sans": "5.3.0",
-    "@fontsource/vt323": "5.3.0",
-    "@fontsource/spectral": "5.3.0"
+    "@fontsource/jersey-15": "5.3.0"
   },
   "devDependencies": {
     "typescript": "5.9.3",

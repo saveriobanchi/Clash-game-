@@ -1,5 +1,6 @@
-import { h, A, clear, sleep, tween } from '../dom';
-import { px, pxCanvas } from '../px';
+import { h, clear, sleep, tween } from '../dom';
+import { px, pxCanvas, pxUrl } from '../px';
+import { sprite } from '../../art';
 import { sfx } from '../audio';
 import { burst, shake, coinShower, flash, centerOf, floatText } from '../fx';
 import { GameMount } from '../shell';
@@ -16,12 +17,12 @@ export const coinGame: GameMount = ctx => {
   type V = 'classic' | 'streak' | 'cursed';
   let v: V = ctx.variants<V>([{ id: 'classic', label: 'Classic ×1.96' }, { id: 'streak', label: 'Streak' }, { id: 'cursed', label: 'Cursed edge ×48' }], 'classic', x => { v = x; render(); });
   const coin = h('div', 'coin3d',
-    h('div', 'coin-face heads', h('img', { src: A('emblems/ember.webp'), alt: '' })),
-    h('div', 'coin-face tails', h('img', { src: A('emblems/veil.webp'), alt: '' })),
+    h('div', 'coin-face heads', sprite('mask_player', 96)),
+    h('div', 'coin-face tails', sprite('skull', 96)),
     h('div', 'coin-edge'));
   const wrap = h('div', 'coin-wrap', coin, h('div', 'coin-shadow'));
   const streakInfo = h('div', 'mult-tag', '');
-  const legend = h('div', 'label-gold', 'Ember is heads · Veil is tails');
+  const legend = h('div', 'label-gold', 'Mask or skull?');
   ctx.stage.append(wrap, streakInfo, legend);
   let rot = 0, chain = 0, chainStake = 0, flipping = false;
   async function flip(call: G.CoinSide): Promise<void> {
@@ -52,14 +53,14 @@ export const coinGame: GameMount = ctx => {
         render();
       } else {
         ctx.settle(chainStake, 0, coin);
-        ctx.say(`${res === 'heads' ? 'Ember' : 'Veil'}. The chain breaks.`, 'lose');
+        ctx.say(`${res === 'heads' ? 'Mask' : 'Skull'}. The chain breaks.`, 'lose');
         shake(coin, 1.5); chain = 0; streakInfo.textContent = ''; ctx.busy(false); render();
       }
     } else {
       const pay = !won ? 0 : res === 'edge' ? G.COIN.cursed.edge : v === 'cursed' ? G.COIN.cursed.side : G.COIN.classic.pay;
       ctx.settle(stake, stake * pay, coin);
       if (won && res === 'edge') feat('edge');
-      ctx.say(res === 'edge' ? 'It stands upon its edge!' : `${res === 'heads' ? 'Ember' : 'Veil'}${won ? ' — yours.' : '.'}`, won ? 'win' : 'lose');
+      ctx.say(res === 'edge' ? 'It stands upon its edge!' : `${res === 'heads' ? 'Mask' : 'Skull'}${won ? ' — yours.' : '.'}`, won ? 'win' : 'lose');
       if (!won) shake(coin);
       ctx.busy(false);
     }
@@ -74,12 +75,12 @@ export const coinGame: GameMount = ctx => {
   function render(): void {
     clear(ctx.controls);
     if (v === 'streak' && chain > 0) {
-      ctx.controls.append(btn('Ember', '', () => void flip('heads')), btn(`Take ${fmt(chainStake * Math.pow(G.COIN.classic.pay, chain))}`, 'blood', cashOut), btn('Veil', '', () => void flip('tails')));
+      ctx.controls.append(btn('Mask', '', () => void flip('heads')), btn(`Take ${fmt(chainStake * Math.pow(G.COIN.classic.pay, chain))}`, 'blood', cashOut), btn('Skull', '', () => void flip('tails')));
       return;
     }
-    ctx.controls.append(btn('Ember', 'blood', () => void flip('heads')));
+    ctx.controls.append(btn('Mask', 'primary', () => void flip('heads')));
     if (v === 'cursed') ctx.controls.append(btn('Edge', '', () => void flip('edge')));
-    ctx.controls.append(btn('Veil', 'blood', () => void flip('tails')));
+    ctx.controls.append(btn('Skull', 'primary', () => void flip('tails')));
   }
   render();
 };
@@ -98,7 +99,7 @@ export const diceGame: GameMount = ctx => {
   function buildRoll(): void {
     const big = h('div', 'big-num gild', '50.00');
     const chanceEl = h('div', 'num'), multEl = h('div', 'num');
-    const bar = h('div', 'dice-bar'), fill = h('div', 'dice-fill'), mark = h('div', 'dice-mark', px('lottacievements_skull', 22));
+    const bar = h('div', 'dice-bar'), fill = h('div', 'dice-fill'), mark = h('div', 'dice-mark', px('skull', 22));
     bar.append(fill, mark);
     const slider = h('input', { type: 'range', min: '2', max: '98', step: '0.5', value: String(target), class: 'dice-range' }) as HTMLInputElement;
     const ou = h('button', { class: 'btn ghost sm', onclick: () => { over = !over; target = 100 - target; slider.value = String(target); upd(); sfx.click(); } });
@@ -112,7 +113,7 @@ export const diceGame: GameMount = ctx => {
     };
     slider.oninput = () => { upd(); sfx.tick(); };
     upd();
-    ctx.stage.append(h('div', 'dice-dice', h('img', { src: A('ui/die5.png'), alt: '' }), h('img', { src: A('ui/dieR2.png'), alt: '' })), big, bar, slider,
+    ctx.stage.append(h('div', 'dice-dice', sprite('die5', 52), sprite('die2', 52)), big, bar, slider,
       h('div', { style: { display: 'flex', justifyContent: 'space-between', width: '100%', maxWidth: '340px', fontSize: '24px', color: 'var(--gold-hi)' } }, chanceEl, multEl), ou);
     ctx.controls.append(btn('Roll the bones', 'blood big', async () => {
       if (rolling) return;
@@ -134,7 +135,7 @@ export const diceGame: GameMount = ctx => {
   }
   function buildTriple(): void {
     const dice = h('div', 'dice-row');
-    const dimg = [1, 2, 3].map(i => h('img', { src: A(`ui/dieR${i + 2}.png`), class: 'die', alt: '' }));
+    const dimg = [1, 2, 3].map(i => sprite('die' + (i + 2), 64, 'die'));
     dice.append(...dimg);
     const sumEl = h('div', 'mult-tag', ' ');
     const grid = h('div', 'tb-grid');
@@ -157,8 +158,8 @@ export const diceGame: GameMount = ctx => {
       const d = G.roll3d6();
       sfx.play('collide', 0.7, 0.7);
       dimg.forEach(i => i.classList.add('tumble'));
-      for (let k = 0; k < 10; k++) { dimg.forEach(i => (i.src = A(`ui/dieR${1 + randInt(6)}.png`))); await sleep(70); if (k % 3 === 0) sfx.tick(k); }
-      dimg.forEach((i, k) => { i.src = A(`ui/dieR${d[k]}.png`); i.classList.remove('tumble'); });
+      for (let k = 0; k < 10; k++) { dimg.forEach(i => (i.src = pxUrl('die' + (1 + randInt(6)), 5))); await sleep(70); if (k % 3 === 0) sfx.tick(k); }
+      dimg.forEach((i, k) => { i.src = pxUrl('die' + d[k], 5); i.classList.remove('tumble'); });
       sfx.play('chip', 0.8, 0.7);
       const won = G.tripleWins(tbet, d);
       sumEl.textContent = `${d.join(' · ')}  =  ${d[0] + d[1] + d[2]}`;
@@ -177,7 +178,7 @@ export const reelsGame: GameMount = ctx => {
   const cv = h('canvas', { class: 'reels-cv' }); cv.width = W * 2; cv.height = H * 2;
   const c = cv.getContext('2d')!;
   c.scale(2, 2); c.imageSmoothingEnabled = false;
-  const hoard = h('div', 'hoard', px('lottachievements_crowned_skull', 26), h('span', {}, 'Hoard '), h('b', { class: 'num' }, fmt(S.hoard)));
+  const hoard = h('div', 'hoard', px('crown_skull', 26), h('span', {}, 'Hoard '), h('b', { class: 'num' }, fmt(S.hoard)));
   const fsTag = h('div', 'mult-tag', '');
   const blurb = h('div', 'muted small', { style: { textAlign: 'center', maxWidth: '340px' } }, m.blurb);
   ctx.stage.append(hoard, h('div', 'reels-frame', cv), fsTag, blurb);
@@ -193,7 +194,7 @@ export const reelsGame: GameMount = ctx => {
     c.clearRect(0, 0, W, H);
     for (let r = 0; r < 5; r++) {
       const x = r * CELL;
-      c.fillStyle = r % 2 ? '#1a0a10' : '#220d15'; c.fillRect(x, 0, CELL, H);
+      c.fillStyle = r % 2 ? '#1c0e1a' : '#1c0e1a'; c.fillRect(x, 0, CELL, H);
       const strip = strips[r];
       const off = offsets[r];
       for (let k = 0; k < strip.length; k++) {
@@ -201,31 +202,31 @@ export const reelsGame: GameMount = ctx => {
         const y = k * CELL + off;
         if (y < -CELL || y > H) continue;
         const s = m.symbols[strip[idx]];
-        if (s.wild) { c.fillStyle = 'rgba(255,190,80,.14)'; c.fillRect(x + 4, y + 4, CELL - 8, CELL - 8); }
-        if (s.scatter) { c.fillStyle = 'rgba(120,220,255,.12)'; c.fillRect(x + 4, y + 4, CELL - 8, CELL - 8); }
+        if (s.wild) { c.fillStyle = 'rgba(255,195,90,.14)'; c.fillRect(x + 4, y + 4, CELL - 8, CELL - 8); }
+        if (s.scatter) { c.fillStyle = 'rgba(166,245,226,.12)'; c.fillRect(x + 4, y + 4, CELL - 8, CELL - 8); }
         c.drawImage(sym(strip[idx]), x + 10, y + 10, CELL - 20, CELL - 20);
       }
-      c.fillStyle = 'rgba(0,0,0,.5)'; c.fillRect(x + CELL - 1, 0, 1, H);
+      c.fillStyle = 'rgba(12,7,16,.5)'; c.fillRect(x + CELL - 1, 0, 1, H);
       if (spinning && anticip >= 0 && r >= anticip) {
         const a = 0.25 + 0.2 * Math.sin(performance.now() / 80);
-        c.fillStyle = `rgba(120,220,255,${a})`; c.fillRect(x + 2, 0, CELL - 4, H);
+        c.fillStyle = `rgba(166,245,226,${a})`; c.fillRect(x + 2, 0, CELL - 4, H);
       }
     }
     const g = c.createLinearGradient(0, 0, 0, H);
-    g.addColorStop(0, 'rgba(0,0,0,.6)'); g.addColorStop(0.18, 'rgba(0,0,0,0)'); g.addColorStop(0.82, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.6)');
+    g.addColorStop(0, 'rgba(12,7,16,.6)'); g.addColorStop(0.18, 'rgba(12,7,16,0)'); g.addColorStop(0.82, 'rgba(12,7,16,0)'); g.addColorStop(1, 'rgba(12,7,16,.6)');
     c.fillStyle = g; c.fillRect(0, 0, W, H);
     if (winLines.length && !spinning) {
       const wl = winLines[Math.floor(pulse / 50) % winLines.length];
       const line = LINES[wl.line];
-      c.lineWidth = 4; c.strokeStyle = `hsla(${30 + wl.line * 25}, 100%, 65%, .95)`; c.shadowColor = '#ff9a3c'; c.shadowBlur = 12;
+      c.lineWidth = 4; c.strokeStyle = `hsla(${30 + wl.line * 25}, 100%, 65%, .95)`; c.shadowColor = '#f2783a'; c.shadowBlur = 12;
       c.beginPath(); line.forEach((row, reel) => { const px_ = reel * CELL + CELL / 2, py = row * CELL + CELL / 2; if (reel === 0) c.moveTo(px_, py); else c.lineTo(px_, py); }); c.stroke();
       c.shadowBlur = 0;
       const pz = 1 + 0.12 * Math.abs(Math.sin(pulse / 8));
       for (let reel = 0; reel < wl.count; reel++) {
         const cx = reel * CELL + CELL / 2, cy = line[reel] * CELL + CELL / 2, sz = (CELL - 20) * pz;
-        c.fillStyle = 'rgba(255,200,90,.18)'; c.fillRect(reel * CELL + 3, line[reel] * CELL + 3, CELL - 6, CELL - 6);
+        c.fillStyle = 'rgba(255,195,90,.18)'; c.fillRect(reel * CELL + 3, line[reel] * CELL + 3, CELL - 6, CELL - 6);
         c.drawImage(sym(grid[reel][line[reel]]), cx - sz / 2, cy - sz / 2, sz, sz);
-        c.strokeStyle = '#ffe08a'; c.lineWidth = 2; c.strokeRect(reel * CELL + 4, line[reel] * CELL + 4, CELL - 8, CELL - 8);
+        c.strokeStyle = '#f6d27a'; c.lineWidth = 2; c.strokeRect(reel * CELL + 4, line[reel] * CELL + 4, CELL - 8, CELL - 8);
       }
     }
   }
@@ -289,7 +290,7 @@ export const reelsGame: GameMount = ctx => {
     let jackpot = first.res.jackpot;
     let fs = first.res.freeSpins;
     if (fs > 0) {
-      sfx.soul(); flash('rgba(120,220,255,.25)');
+      sfx.soul(); flash('rgba(166,245,226,.25)');
       ctx.say(`${fs} free spins at ×${m.freeMult}!`, 'win');
       await sleep(900);
       let played = 0;
@@ -369,7 +370,7 @@ export const hiloGame: GameMount = ctx => {
     await sleep(120);
     showCard(next);
     if (next === 0) {
-      sfx.doom(); flash('rgba(200,0,30,.35)'); shake(cardBox, 2);
+      sfx.doom(); flash('rgba(154,31,55,.35)'); shake(cardBox, 2);
       ctx.settle(stake, 0, cardBox); ctx.say('A skull. The ladder collapses.', 'lose'); active = false; ctx.busy(false);
     } else {
       const ok = dir === 'hi' ? next >= prev : next <= prev;
@@ -401,7 +402,7 @@ export const hiloGame: GameMount = ctx => {
     const sk = btn(`Skip (${3 - skips})`, 'ghost sm', () => { if (skips >= 3) return; skips++; rank = 1 + randInt(13); showCard(rank); render(); });
     if (skips >= 3) sk.disabled = true;
     ctx.controls.append(lb, h('div', { style: { display: 'flex', flexDirection: 'column', gap: '6px', flex: '1' } }, cb, sk), hb);
-    if (eye) odds.textContent = `Oracle’s Eye: higher-or-same ${(hiloP(rank, 'hi') * 100).toFixed(0)}% · lower-or-same ${(hiloP(rank, 'lo') * 100).toFixed(0)}%`;
+    if (eye) odds.textContent = `Marrow’s Eye: higher-or-same ${(hiloP(rank, 'hi') * 100).toFixed(0)}% · lower-or-same ${(hiloP(rank, 'lo') * 100).toFixed(0)}%`;
   }
   reset();
   void floatText;

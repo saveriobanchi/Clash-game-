@@ -1,8 +1,7 @@
 import { h, clear } from './dom';
 import { sfx } from './audio';
 import { burst, floatText, bigWin, centerOf, shake, flash, flyCoins } from './fx';
-import { pxUrl } from './px';
-import { FLOORS, hotGame } from '../core/content';
+import { hotGame } from '../core/content';
 import { goldIcon, toast, icon, modal } from './ui';
 import * as E from '../core/economy';
 import type { GameDef } from '../core/content';
@@ -50,16 +49,14 @@ export function buildGameShell(def: GameDef, mount: GameMount, onBack: () => voi
   const plus = h('button', { class: 'stepbtn', onclick: () => step(1) }, '+');
   const half = h('button', { class: 'stepbtn', onclick: () => setBet(bet / 2) }, '½');
   const dbl = h('button', { class: 'stepbtn', onclick: () => setBet(bet * 2) }, '×2');
-  const max = h('button', { class: 'stepbtn', style: { fontSize: '16px' }, onclick: () => setBet(Math.min(E.maxBet(), E.S.gold)) }, 'MAX');
-  const betbar = h('div', 'betbar', minus, half, h('div', 'betbox', goldIcon(26), betVal), dbl, plus, max);
+  const max = h('button', { class: 'stepbtn', onclick: () => setBet(Math.min(E.maxBet(), E.S.gold)) }, 'MAX');
+  const betbar = h('div', 'betbar', minus, half, h('div', 'betbox', h('span', 'bet-label', 'Stake'), goldIcon(18), betVal), dbl, plus, max);
   const ctrlWrap = h('div', 'controls', result, controls, betbar);
-  const back = h('button', { class: 'iconbtn', 'aria-label': 'Back', onclick: () => { if (isBusy) { toast(['Finish the round first.']); return; } leave(); } }, icon('arrow_counterclockwise'));
-  const info = h('button', { class: 'iconbtn', 'aria-label': 'Rules', onclick: () => modal(close => [h('h3', 'h2 gild', def.name), h('p', {}, def.how), h('p', 'muted small', `Return to player: ${def.rtp}. Table limit ${E.fmt(E.minBet())}–${E.fmt(E.maxBet())}.`), h('button', { class: 'btn', onclick: close }, 'Understood')]) }, icon('book_open'));
-  const fl = FLOORS.find(f => f.id === def.floor)!;
-  const candle = (side: string) => h('div', { class: `candle ${side}`, style: { backgroundImage: `url(${pxUrl('default_torch_on_floor_animated')})` } });
-  const stageBox = h('div', 'stage panel frame', h('div', { class: 'stage-tile', style: { backgroundImage: `url(${pxUrl(fl.tile)})` } }), h('div', 'stage-glow'), candle('l'), candle('r'), stage);
-  const title = h('div', 'title', h('div', 'h1 gild', def.name), def.id === hotGame() ? h('div', 'hot-tag', '🜂 hot table · double infamy') : null);
-  const root = h('div', 'game', h('div', 'ghead', back, title, info), variantsBar, stageBox, ctrlWrap);
+  const back = h('button', { class: 'icon-btn', 'aria-label': 'Back to the floor', onclick: () => { if (isBusy) { toast(['Finish the round first.']); return; } leave(); } }, icon('i_back', 22));
+  const info = h('button', { class: 'icon-btn', 'aria-label': 'How to play', onclick: () => modal(close => [h('h3', 'm-title', def.name), h('p', 'm-text', def.how), h('p', 'm-note', `Return to player ${def.rtp} · table limit ${E.fmt(E.minBet())}–${E.fmt(E.maxBet())}`), h('button', { class: 'btn gold wide', onclick: close }, 'Got it')]) }, icon('i_info', 22));
+  const stageBox = h('div', 'stage panel', stage);
+  const title = h('div', 'g-title', h('h1', {}, def.name), def.id === hotGame() ? h('div', 'g-hot', 'Hot table · double infamy') : null);
+  const root = h('div', 'game', h('div', 'g-head', back, title, info), variantsBar, stageBox, ctrlWrap);
   root.dataset.floor = def.floor;
   function leave(): void { cleanups.forEach(f => f()); E.endRound(); onBack(); }
   function setBet(v: number): void {
@@ -97,7 +94,7 @@ export function buildGameShell(def: GameDef, mount: GameMount, onBack: () => voi
     },
     wager: (stake, extra = false) => {
       if (stake > E.S.gold + 1e-9) {
-        toast([h('b', {}, 'Not enough gold. '), E.canBorrow() ? 'The Proprietor offers a loan in the Ledger.' : 'Lower your stake.'], 'blood');
+        toast([E.canBorrow() ? 'Not enough gold. The Proprietor offers a loan in the Ledger.' : 'Not enough gold. Lower your stake.'], 'danger');
         shake(betbar);
         return false;
       }
@@ -113,7 +110,7 @@ export function buildGameShell(def: GameDef, mount: GameMount, onBack: () => voi
           floatText(x, y, '+' + E.fmt(r.paid), 'gold');
           flyCoins(x, y, Math.min(24, 6 + Math.round(Math.log2(r.mult + 1) * 4)));
           stageBox.classList.remove('won'); void stageBox.offsetWidth; stageBox.classList.add('won');
-          burst(x, y, { n: Math.min(60, 14 + Math.round(r.mult * 3)) });
+          burst(x, y, { n: Math.min(30, 10 + Math.round(r.mult * 2)) });
           sfx.win(Math.min(4, Math.ceil(Math.log2(r.mult + 1))));
         }
         if (r.mult >= 10) setTimeout(() => void bigWin(r.mult, r.paid), 350);
@@ -122,7 +119,7 @@ export function buildGameShell(def: GameDef, mount: GameMount, onBack: () => voi
         if (!quiet) floatText(x, y, 'push', 'gold');
       } else if (!quiet) {
         sfx.lose();
-        if (r.paid === 0 && stake >= E.maxBet() * 0.5) flash('rgba(160,0,20,.25)');
+        if (r.paid === 0 && stake >= E.maxBet() * 0.5) flash();
       }
       return r;
     },

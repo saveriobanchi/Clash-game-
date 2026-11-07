@@ -1,15 +1,13 @@
-import { A, h, sleep, tween } from './dom';
-import { pxCanvas } from './px';
+import { h, sleep, tween } from './dom';
+import { sprite, spriteCanvas, PAL } from '../art';
 import { sfx } from './audio';
 import { fmt } from '../core/economy';
 
-/* One full-screen canvas for particles: Kenney Particle Pack textures tinted on the fly + pixel-art coins. */
-interface P { x: number; y: number; vx: number; vy: number; life: number; max: number; size: number; rot: number; vr: number; img: CanvasImageSource; add: boolean; grav: number; fade: number; px?: boolean }
+/* Effects, all in the game's own pixel language: square sparks with a soft glow, coin sprites, masks. */
+interface P { x: number; y: number; vx: number; vy: number; life: number; max: number; size: number; color: string; grav: number; img?: CanvasImageSource; rot: number; vr: number }
 const parts: P[] = [];
-let drawFlyers: ((dt: number) => void) | null = null;
 let cvs: HTMLCanvasElement, ctx: CanvasRenderingContext2D;
-const tex = new Map<string, HTMLImageElement>();
-const tinted = new Map<string, HTMLCanvasElement>();
+let drawFlyers: ((dt: number) => void) | null = null;
 export let motion = true;
 export const setMotion = (m: boolean): void => { motion = m; };
 
@@ -19,129 +17,81 @@ export function initFx(): void {
   ctx = cvs.getContext('2d')!;
   const fit = () => { const d = Math.min(2, devicePixelRatio || 1); cvs.width = innerWidth * d; cvs.height = innerHeight * d; ctx.setTransform(d, 0, 0, d, 0, 0); };
   fit(); addEventListener('resize', fit);
-  for (const n of ['spark_01', 'spark_04', 'spark_06', 'star_04', 'star_06', 'star_08', 'flame_02', 'flame_04', 'magic_02', 'magic_04', 'light_01', 'light_03', 'circle_05', 'smoke_04', 'smoke_07', 'twirl_02', 'flare_01', 'symbol_02']) {
-    const i = new Image(); i.src = A(`fx/${n}.png`); tex.set(n, i);
-  }
   let last = performance.now();
   const loop = (now: number) => {
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
     ctx.clearRect(0, 0, innerWidth, innerHeight);
+    ctx.imageSmoothingEnabled = false;
     for (let i = parts.length - 1; i >= 0; i--) {
       const p = parts[i];
       p.life += dt;
       if (p.life >= p.max) { parts.splice(i, 1); continue; }
       p.vy += p.grav * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.rot += p.vr * dt;
-      const k = p.life / p.max;
-      ctx.globalAlpha = p.fade ? Math.min(1, (1 - k) * 2) : 1;
-      ctx.globalCompositeOperation = p.add ? 'lighter' : 'source-over';
-      ctx.imageSmoothingEnabled = !p.px;
-      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
-      const s = p.size * (p.add ? 0.6 + k * 0.6 : 1);
-      ctx.drawImage(p.img, -s / 2, -s / 2, s, s);
-      ctx.restore();
+      const k = 1 - p.life / p.max;
+      if (p.img) {
+        ctx.save(); ctx.translate(Math.round(p.x), Math.round(p.y)); ctx.rotate(Math.round(p.rot * 4) / 4);
+        ctx.drawImage(p.img, -p.size / 2, -p.size / 2, p.size, p.size); ctx.restore();
+      } else {
+        const s = Math.max(2, Math.round(p.size * (0.4 + k * 0.6) / 2) * 2);
+        ctx.globalAlpha = Math.min(1, k * 1.6);
+        ctx.fillStyle = p.color; ctx.fillRect(Math.round(p.x - s / 2), Math.round(p.y - s / 2), s, s);
+        ctx.globalAlpha = Math.min(0.25, k * 0.4); ctx.fillRect(Math.round(p.x - s), Math.round(p.y - s), s * 2, s * 2);
+        ctx.globalAlpha = 1;
+      }
     }
-    ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
     drawFlyers?.(dt);
     requestAnimationFrame(loop);
   };
   requestAnimationFrame(loop);
 }
-function tint(name: string, color: string): CanvasImageSource {
-  const key = name + color;
-  const hit = tinted.get(key);
-  if (hit) return hit;
-  const src = tex.get(name);
-  const c = document.createElement('canvas'); c.width = c.height = 128;
-  if (src && src.complete && src.naturalWidth) {
-    const g = c.getContext('2d')!;
-    g.drawImage(src, 0, 0, 128, 128);
-    g.globalCompositeOperation = 'source-in'; g.fillStyle = color; g.fillRect(0, 0, 128, 128);
-    tinted.set(key, c);
-  }
-  return c;
-}
-export function burst(x: number, y: number, o: { n?: number; colors?: string[]; tex?: string[]; speed?: number; size?: number; life?: number; grav?: number } = {}): void {
+const GOLDS = [PAL.y, PAL.g, PAL.h, PAL.f];
+export function burst(x: number, y: number, o: { n?: number; colors?: string[]; speed?: number; size?: number; life?: number; grav?: number; tex?: string[] } = {}): void {
   if (!motion) return;
-  const n = o.n ?? 24, colors = o.colors ?? ['#ffd27a', '#ff9a3c', '#fff1c1'], texs = o.tex ?? ['spark_04', 'star_06', 'flare_01'];
+  const n = Math.min(40, o.n ?? 18), colors = o.colors ?? GOLDS;
   for (let i = 0; i < n; i++) {
-    const a = Math.random() * Math.PI * 2, sp = (o.speed ?? 260) * (0.3 + Math.random());
-    parts.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 60, life: 0, max: (o.life ?? 0.9) * (0.6 + Math.random() * 0.8), size: (o.size ?? 34) * (0.5 + Math.random()), rot: Math.random() * 6, vr: (Math.random() - 0.5) * 6, img: tint(texs[i % texs.length], colors[i % colors.length]), add: true, grav: o.grav ?? 200, fade: 1 });
+    const a = Math.random() * Math.PI * 2, sp = (o.speed ?? 220) * (0.3 + Math.random());
+    parts.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 80, life: 0, max: (o.life ?? 0.8) * (0.6 + Math.random() * 0.6), size: Math.min(10, (o.size ?? 24) / 4) * (0.6 + Math.random()), color: colors[i % colors.length], grav: o.grav ?? 360, rot: 0, vr: 0 });
   }
 }
-/** Pixel-art gold raining from the top (AETHERFORGE CC0 items). */
-export function coinShower(n = 40, sprites = ['default_gold_ingot', 'default_gold_lump', 'default_diamond', 'ruby', 'emerald', 'default_apple_gold']): void {
+export function coinShower(n = 30): void {
   if (!motion) return;
-  for (let i = 0; i < n; i++) {
-    const key = sprites[i % sprites.length];
-    parts.push({ x: Math.random() * innerWidth, y: -40 - Math.random() * innerHeight * 0.6, vx: (Math.random() - 0.5) * 80, vy: 120 + Math.random() * 200, life: 0, max: 3.2, size: 26 + Math.random() * 18, rot: Math.random(), vr: (Math.random() - 0.5) * 5, img: pxCanvas(key), add: false, grav: 320, fade: 0, px: true });
-  }
+  const coin = spriteCanvas('coin', 2);
+  for (let i = 0; i < Math.min(80, n); i++) parts.push({ x: Math.random() * innerWidth, y: -30 - Math.random() * innerHeight * 0.5, vx: (Math.random() - 0.5) * 50, vy: 80 + Math.random() * 160, life: 0, max: 3, size: 24 + (i % 3) * 4, color: '', img: coin, grav: 300, rot: 0, vr: (Math.random() - 0.5) * 6 });
 }
-/** A slow fountain of embers / souls. */
-export function rise(x: number, y: number, color = '#ff6a3a', n = 18): void {
+export function rise(x: number, y: number, color: string = PAL.q, n = 14): void {
   if (!motion) return;
-  for (let i = 0; i < n; i++) parts.push({ x: x + (Math.random() - 0.5) * 80, y, vx: (Math.random() - 0.5) * 30, vy: -60 - Math.random() * 120, life: 0, max: 1.6 + Math.random(), size: 20 + Math.random() * 30, rot: 0, vr: 1, img: tint(i % 2 ? 'magic_02' : 'light_01', color), add: true, grav: -20, fade: 1 });
+  for (let i = 0; i < n; i++) parts.push({ x: x + (Math.random() - 0.5) * 60, y, vx: (Math.random() - 0.5) * 20, vy: -50 - Math.random() * 90, life: 0, max: 1.4 + Math.random(), size: 6 + Math.random() * 4, color, grav: -10, rot: 0, vr: 0 });
 }
 export function floatText(x: number, y: number, text: string, cls = 'gold'): void {
   const el = h('div', `float-text ${cls}`, text);
   el.style.left = x + 'px'; el.style.top = y + 'px';
   document.body.append(el);
-  setTimeout(() => el.remove(), 1600);
+  setTimeout(() => el.remove(), 1400);
 }
 export function shake(el: HTMLElement, power = 1): void {
   if (!motion) return;
-  el.style.setProperty('--shake', String(power));
+  el.style.setProperty('--shake', String(Math.min(1.5, power)));
   el.classList.remove('shaking'); void el.offsetWidth; el.classList.add('shaking');
-  setTimeout(() => el.classList.remove('shaking'), 500);
+  setTimeout(() => el.classList.remove('shaking'), 450);
 }
-export function flash(color = 'rgba(255,40,40,.35)'): void {
+export function flash(color = 'rgba(214,58,74,.22)'): void {
   const el = h('div', 'flash'); el.style.background = color; document.body.append(el);
-  setTimeout(() => el.remove(), 600);
+  setTimeout(() => el.remove(), 500);
 }
 export const centerOf = (el: Element): [number, number] => { const r = el.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; };
 
-const TITLES: [number, string, string, string][] = [[1000, 'APOCALYPSE', 'mirror', 't5'], [250, 'DAMNATION', 'ember', 't4'], [100, 'PORTENT', 'thorn', 't3'], [25, 'BLOOD FORTUNE', 'veil', 't2'], [10, 'OMEN', 'ember', 't1']];
-let bigOpen = false;
-/** Full-screen celebration for wins of ×10 and up. */
-export async function bigWin(mult: number, amount: number): Promise<void> {
-  if (bigOpen) return;
-  bigOpen = true;
-  const [, title, emblem, tier] = TITLES.find(t => mult >= t[0]) ?? TITLES[TITLES.length - 1];
-  const amt = h('div', 'bw-amount', '0');
-  const ov = h('div', `bigwin ${tier}`,
-    h('div', 'bw-rays'),
-    h('img', { class: 'bw-emblem', src: A(`emblems/${emblem}.webp`), alt: '' }),
-    h('div', 'bw-title', title),
-    h('div', 'bw-mult', `×${mult >= 100 ? Math.round(mult) : mult.toFixed(2)}`),
-    amt,
-    h('div', 'bw-tap', 'tap to continue'));
-  document.body.append(ov);
-  sfx.bigWin();
-  coinShower(mult >= 1000 ? 160 : mult >= 100 ? 90 : 50);
-  if (mult >= 100) { const app = document.getElementById('app'); if (app) shake(app, mult >= 1000 ? 2.5 : 1.4); }
-  if (mult >= 250) setTimeout(() => burst(innerWidth / 2, innerHeight * 0.4, { n: 80, speed: 600, size: 60, colors: ['#ff2a3a', '#ffd27a', '#fff'] }), 600);
-  burst(innerWidth / 2, innerHeight * 0.4, { n: 60, speed: 420, size: 50 });
-  let done = false;
-  const close = () => { if (done) return; done = true; ov.classList.add('out'); setTimeout(() => ov.remove(), 400); bigOpen = false; };
-  ov.addEventListener('click', close);
-  await tween(1600, t => { amt.textContent = '+' + fmt(amount * t); });
-  sfx.coin();
-  await sleep(1800);
-  close();
-}
-
 /* ---------- coins that fly into the gold counter ---------- */
-interface Flyer { x0: number; y0: number; cx: number; cy: number; t: number; d: number; delay: number; img: CanvasImageSource; s: number; done: boolean }
+interface Flyer { x0: number; y0: number; cx: number; cy: number; t: number; d: number; delay: number; done: boolean }
 const flyers: Flyer[] = [];
+const pendingArrive: (() => void)[] = [];
 export function flyCoins(x: number, y: number, n = 10, onArrive?: () => void): void {
   const target = document.getElementById('gold');
   if (!motion || !target) { onArrive?.(); return; }
   const r = target.getBoundingClientRect();
-  const tx = r.left + 10, ty = r.top + r.height / 2;
-  for (let i = 0; i < n; i++) {
-    flyers.push({ x0: x + (Math.random() - 0.5) * 60, y0: y + (Math.random() - 0.5) * 40, cx: x + (Math.random() - 0.5) * 240, cy: Math.min(y, ty) - 60 - Math.random() * 120, t: 0, d: 0.65 + Math.random() * 0.3, delay: i * 0.035, img: pxCanvas(i % 4 === 0 ? 'default_gold_ingot' : 'default_gold_lump'), s: 18 + Math.random() * 8, done: false });
-  }
-  const prevDone = onArrive;
-  pendingArrive.push(() => prevDone?.());
+  const tx = r.left + 8, ty = r.top + r.height / 2;
+  const coin = spriteCanvas('coin', 1);
+  for (let i = 0; i < Math.min(16, n); i++) flyers.push({ x0: x + (Math.random() - 0.5) * 50, y0: y + (Math.random() - 0.5) * 30, cx: x + (Math.random() - 0.5) * 200, cy: Math.min(y, ty) - 40 - Math.random() * 90, t: 0, d: 0.6 + Math.random() * 0.25, delay: i * 0.04, done: false });
+  if (onArrive) pendingArrive.push(onArrive);
   drawFlyers = (dt: number) => {
     for (const f of flyers) {
       if (f.done) continue;
@@ -149,32 +99,49 @@ export function flyCoins(x: number, y: number, n = 10, onArrive?: () => void): v
       f.t += dt / f.d;
       if (f.t >= 1) {
         f.done = true;
-        sfx.tone(1900 + Math.random() * 600, 0.04, 'square', 0.02);
+        sfx.tone(1900 + Math.random() * 500, 0.04, 'square', 0.02);
         const pill = target.parentElement; if (pill) { pill.classList.remove('bump'); void pill.offsetWidth; pill.classList.add('bump'); }
         continue;
       }
       const t = f.t * f.t, u = 1 - t;
-      const x_ = u * u * f.x0 + 2 * u * t * f.cx + t * t * tx, y_ = u * u * f.y0 + 2 * u * t * f.cy + t * t * ty;
-      ctx.save(); ctx.imageSmoothingEnabled = false; ctx.globalAlpha = 1;
-      ctx.translate(x_, y_); ctx.rotate(f.t * 8);
-      const sz = f.s * (1 - f.t * 0.4);
-      ctx.drawImage(f.img, -sz / 2, -sz / 2, sz, sz); ctx.restore();
+      const X = u * u * f.x0 + 2 * u * t * f.cx + t * t * tx, Y = u * u * f.y0 + 2 * u * t * f.cy + t * t * ty;
+      ctx.drawImage(coin, Math.round(X - 8), Math.round(Y - 7), 16, 14);
     }
     for (let i = flyers.length - 1; i >= 0; i--) if (flyers[i].done) flyers.splice(i, 1);
-    if (!flyers.length) { drawFlyers = null; const cbs = pendingArrive.splice(0); cbs.forEach(c => c()); }
+    if (!flyers.length) { drawFlyers = null; pendingArrive.splice(0).forEach(c => c()); }
   };
 }
-const pendingArrive: (() => void)[] = [];
 
-/* ---------- descending onto a new floor ---------- */
+/* ---------- descending onto a floor ---------- */
 export async function floorCard(sub: string, name: string, host: string, lore: string): Promise<void> {
-  const el = h('div', 'floor-card',
-    h('img', { class: 'fc-host', src: A(`portraits/${host}.webp`), alt: '' }),
-    h('div', 'fc-sub', sub), h('div', 'fc-name', name), h('div', 'fc-lore', lore));
+  const el = h('div', 'floor-card', sprite('mask_' + host, 160, 'fc-host'), h('div', 'fc-sub', sub), h('div', 'fc-name', name), h('div', 'fc-lore', lore));
   document.body.append(el);
-  sfx.whoosh(); sfx.doom();
-  await sleep(motion ? 1700 : 600);
+  sfx.whoosh();
+  await sleep(motion ? 1500 : 500);
   el.classList.add('out');
-  await sleep(500);
+  await sleep(400);
   el.remove();
+}
+
+/* ---------- big wins: the hosts unmask their approval ---------- */
+const TIERS: [number, string, string][] = [[1000, 'Apocalypse', 'proprietor'], [250, 'Damnation', 'marrow'], [100, 'Portent', 'carrion'], [25, 'Blood Fortune', 'moth'], [10, 'Omen', 'moth']];
+let bigOpen = false;
+export async function bigWin(mult: number, amount: number): Promise<void> {
+  if (bigOpen) return;
+  bigOpen = true;
+  const [, title, mask] = TIERS.find(t => mult >= t[0]) ?? TIERS[TIERS.length - 1];
+  const amt = h('div', 'bw-amount', '0');
+  const ov = h('div', `bigwin ${mult >= 250 ? 'high' : ''}`,
+    h('div', 'bw-rays'), sprite('mask_' + mask, 168, 'bw-emblem'),
+    h('div', 'bw-title', title), h('div', 'bw-mult', `×${mult >= 100 ? Math.round(mult) : mult.toFixed(2)}`), amt,
+    h('div', 'bw-tap', 'Tap to continue'));
+  document.body.append(ov);
+  sfx.bigWin();
+  coinShower(mult >= 250 ? 70 : 36);
+  let done = false;
+  const close = () => { if (done) return; done = true; ov.classList.add('out'); setTimeout(() => ov.remove(), 300); bigOpen = false; };
+  ov.addEventListener('click', close);
+  await tween(1400, t => { amt.textContent = '+' + fmt(amount * t); });
+  await sleep(1800);
+  close();
 }
